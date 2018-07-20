@@ -10,12 +10,14 @@ from socket import *
 import _thread
 import random
 import time
+import json
 
 ## global variable
-global_var = {'meeting_status':False, 'old_time':0, 'new_time':0, 'time_str':'00:00:00', 'send_flag':False, 'angle':0}
+global_var = {'meeting_status':False, 'old_time':0, 'new_time':0, 'time_str':'00:00:00', 'angle':0}
 server = {'IP':'192.168.31.209', 'PORT':60000}
 key_word = {'doa':'doa'}
-
+param1 = {'msg_type':'r2t','status':False, 'volumn':0, 'datetime':time.time()}
+param2 = {'msg_type':'t2r', 'doa_angle':0}
 
 def rotate_pic(angle):
     global_var['angle'] = angle
@@ -23,14 +25,33 @@ def rotate_pic(angle):
     label_bg.config(image = photo_bg) 
     label_time.text = str(angle)
 
+
+
 def fun_udp_msg_send(udp_msg):
    my_udp_socket.sendall(udp_msg.encode())
 
 
+
 def thread_udp_recv():
     while True:
-        try:           
+        try:
             recv_data = my_udp_socket.recv(1024)
+            recv_str = recv_data.decode()
+            print(recv_str)            
+            recv_param = json.loads(recv_data)
+            print (recv_param)
+            if recv_param['msg_type'] == 't2r' :
+                print (recv_param['doa_angle'])
+                global_var['angle'] = recv_param['doa_angle']
+                rotate_pic(global_var['angle'])
+            elif recv_param['msg_type'] == 'r2t':
+                print (recv_param['status'])
+                global_var['meeting_status'] = recv_param['status']
+            else:
+                print('wrong param')
+
+            
+            '''
             recv_str = recv_data.decode()
             print(recv_str)
             if recv_str.find(key_word['doa']) != -1:
@@ -41,7 +62,8 @@ def thread_udp_recv():
                 try:
                     rotate_pic(angle)
                 except:
-                    pass            
+                    pass
+            '''
         except:
             pass
     my_udp_socket.close()
@@ -54,7 +76,8 @@ def thread_random_rotate():
         angle = random.randint(0,360)
         pass
         try:
-            rotate_pic(angle)
+            pass
+            #rotate_pic(angle)
         except:
             pass
         
@@ -83,33 +106,6 @@ def fun_meeting_control():
 
 
 
-##class SimpleApp(object):
-##    def __init__(self, master, filename, **kwargs):
-##        self.master = master
-##        self.filename = filename
-##        self.canvas = tk.Canvas(master, width=160, height=160)
-##        self.canvas.pack()
-##        self.update = self.draw().__next__
-##        master.after(20, self.update)
-##
-##
-##
-##    def draw(self):
-##        image = Image.open(self.filename)
-##        
-##
-##        angle = 0
-##
-##        while True:
-##            tkimage = ImageTk.PhotoImage(image.rotate(angle))
-##            canvas_obj = self.canvas.create_image(
-##                80, 80, image=tkimage)
-##            self.master.after_idle(self.update)
-##            yield
-##            self.canvas.delete(canvas_obj)
-##            angle += 1
-##            angle %= 360
-
 ## check system version
 sysstr = platform.system()
 if(sysstr =="Windows"):
@@ -119,9 +115,11 @@ elif(sysstr == "Linux"):
 else:
     print ("Other System tasks")   
 
+
 ## init window
 root = tk.Tk()
 root.config(width = 320, height = 240)
+
 
 ## adapt to raspberry pi
 if(sysstr == "Linux"):
@@ -141,6 +139,7 @@ label_bg = Label(image = photo_bg)
 label_bg.image = photo_bg # keep a reference!
 label_bg.place(x=40,y=0)
 
+
 #button
 photoimage_button = PhotoImage(file="image_metal_button-1.png")
 button_cmd = Button(root, text="OK", command=fun_meeting_control, image = photoimage_button)
@@ -152,6 +151,7 @@ button_cmd.config(width = 100, height = 100, borderwidth = 0, highlightthickness
 ## create UDP socket
 my_udp_socket = socket(AF_INET,SOCK_DGRAM)
 my_udp_socket.connect((server['IP'],server['PORT']))
+
 
 ## create UDP recv thread
 _thread.start_new_thread(thread_udp_recv, ())
