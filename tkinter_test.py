@@ -38,7 +38,7 @@ def thread_udp_recv():
             recv_data = my_udp_socket.recv(1024)
             recv_str = recv_data.decode()
             print(recv_str)            
-            recv_param = json.loads(recv_data)
+            recv_param = json.loads(recv_str)
             print (recv_param)
             if recv_param['msg_type'] == 't2r' :
                 print (recv_param['doa_angle'])
