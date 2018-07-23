@@ -20,7 +20,7 @@ key_word = {'doa':'doa'}
 param1 = {'msg_type':'r2t','status':False, 'volumn':0, 'datetime':time.time()}
 param2 = {'msg_type':'t2r', 'doa_angle':0}
 
-def rotate_pic(angle):
+def fun_rotate_pic(angle):
     global_var['angle'] = angle
     photo_bg.paste(image_bg.rotate(global_var['angle']))
     label_bg.config(image = photo_bg) 
@@ -30,6 +30,22 @@ def rotate_pic(angle):
 def fun_udp_msg_send(udp_msg):
    my_udp_socket.sendall(udp_msg.encode())
 
+   
+def fun_meeting_control():
+    global meeting_status # True is start, False is stop
+    if global_var['meeting_status'] == False:
+        global_var['meeting_status'] = True
+        fun_udp_msg_send('start') 
+        photoimage_button.config(file='image_button_stop-1.png')
+        global_var['time_str'] = '00:00:00'
+        ## initial time
+        global_var['old_time'] = datetime.datetime.now()
+        global_var['new_time'] = global_var['old_time']        
+
+    else:
+        fun_udp_msg_send('stop')
+        global_var['meeting_status'] = False
+        photoimage_button.config(file='image_metal_button-1.png')
 
 
 def thread_udp_recv():
@@ -43,7 +59,7 @@ def thread_udp_recv():
             if recv_param['msg_type'] == 't2r' :
                 print (recv_param['doa_angle'])
                 global_var['angle'] = recv_param['doa_angle']
-                rotate_pic(global_var['angle'])
+                fun_rotate_pic(global_var['angle'])
             elif recv_param['msg_type'] == 'r2t':
                 print (recv_param['status'])
                 global_var['meeting_status'] = recv_param['status']
@@ -59,14 +75,13 @@ def thread_udp_recv():
                 print (index_start, aaa)
                 angle = int(aaa)
                 try:
-                    rotate_pic(angle)
+                    fun_rotate_pic(angle)
                 except:
                     pass
             '''
         except:
             pass
     my_udp_socket.close()
-
 
 
 def thread_random_rotate():
@@ -76,41 +91,22 @@ def thread_random_rotate():
         pass
         try:
             pass
-            rotate_pic(angle)
+            fun_rotate_pic(angle)
         except:
             pass
       
 
-
 def thread_time_update():
-    while global_var['meeting_status'] == True:
-        global_var['new_time'] = datetime.datetime.now()
-        time_delta = global_var['new_time'] - global_var['old_time']
-        m, s = divmod(time_delta.seconds, 60)
-        h, m = divmod(m, 60)
-        global_var['time_str'] = '{0:02d}:{1:02d}:{2:02d}'.format(h, m, s)
-        print(global_var['time_str'])
-        label_time.config(text = global_var['time_str'])
-        time.sleep(1)
-   
-
-def fun_meeting_control():
-    global meeting_status # True is start, False is stop
-    if global_var['meeting_status'] == False:
-        global_var['meeting_status'] = True
-        fun_udp_msg_send('start') 
-        photoimage_button.config(file='image_button_stop-1.png')
-        global_var['time_str'] = '00:00:00'
-        ## initial time
-        global_var['old_time'] = datetime.datetime.now()
-        global_var['new_time'] = global_var['old_time']        
-        _thread.start_new_thread(thread_time_update, ())
-    else:
-        fun_udp_msg_send('stop')
-        global_var['meeting_status'] = False
-        photoimage_button.config(file='image_metal_button-1.png')
-        
-
+    while True:
+        while global_var['meeting_status'] == True:
+            global_var['new_time'] = datetime.datetime.now()
+            time_delta = global_var['new_time'] - global_var['old_time']
+            m, s = divmod(time_delta.seconds, 60)
+            h, m = divmod(m, 60)
+            global_var['time_str'] = '{0:02d}:{1:02d}:{2:02d}'.format(h, m, s)
+            print(global_var['time_str'])
+            label_time.config(text = global_var['time_str'])
+            time.sleep(1)
 
 
 ## check system version
@@ -121,6 +117,9 @@ elif(sysstr == "Linux"):
     print ("Call Linux tasks")
 else:
     print ("Other System tasks")   
+
+global_var['old_time'] = datetime.datetime.now()
+global_var['new_time'] = global_var['old_time']
 
 
 ## init window
@@ -135,9 +134,6 @@ if(sysstr == "Linux"):
     ##server = {'IP':'10.0.5.1', 'PORT':9999}
 	
 
-
-
-
 ## clock background
 image_bg = Image.open("clock.png")
 photo_bg = ImageTk.PhotoImage(image_bg)
@@ -146,16 +142,20 @@ label_bg.image = photo_bg # keep a reference!
 label_bg.place(x=40,y=0)
 
 
-#button
+## button
 photoimage_button = PhotoImage(file="image_metal_button-1.png")
 button_cmd = Button(root, text="OK", command=fun_meeting_control, image = photoimage_button)
+button_cmd.config(activebackground=button_cmd.cget('background'))
 button_cmd.place(x=110,y=70)
-#button.config(image = 'image_metal_button.png')
 button_cmd.config(width = 100, height = 100, borderwidth = 0, highlightthickness = 0)
 
+
+## label angle
 label_angle = Label(root, font='Arial -20 bold')
 label_angle.place(x=0,y=0)
 
+
+## label time
 label_time = Label(root, font='Arial -14 bold', text='00:00:00')
 label_time.place(x=0,y=220)
 
@@ -168,7 +168,7 @@ my_udp_socket.connect((server['IP'],server['PORT']))
 
 ## create UDP recv thread
 _thread.start_new_thread(thread_udp_recv, ())
-
+_thread.start_new_thread(thread_time_update, ())
 #_thread.start_new_thread(thread_random_rotate, ())
 
 
