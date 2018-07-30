@@ -13,6 +13,200 @@ import time
 import json
 import datetime
 
+## 顺序为 width，height，x，y
+pos_root = [320, 240]
+pos_label_wifi = [18, 18, 151, 5]
+pos_button_volume_down = [50, 50, 36, 96]
+pos_button_volume_up = [50, 50, 234, 96]
+
+pos_button_mute = [50, 50, 135, 24]
+pos_button_unmute = [50, 50, 135, 24]
+pos_label_muted = [64, 16, 128, 69]
+pos_button_meeting_start = [120, 120, 100, 60]
+pos_button_meeting_end = [64, 64, 128, 88]
+pos_button_pause = [50, 50, 135, 166]
+pos_button_resume = [50, 50, 135, 166]
+pos_label_volume = [200, 84, 60, 138]
+pos_label_error = [18, 18, 151, 222]
+
+param = {'volume':0}
+
+
+
+
+
+def fun_meeting_start():
+    #button_start.config(visible = 'no')
+    button_meeting_start.place_forget()
+    button_meeting_end.place(x=pos_button_meeting_end[2], y=pos_button_meeting_end[3])
+    pass
+
+def fun_meeting_end():
+    button_meeting_end.place_forget()
+    button_meeting_start.place(x=pos_button_meeting_start[2], y=pos_button_meeting_start[3])
+    pass
+
+def fun_mute():
+    pass
+
+def fun_volume_up():
+    if param['volume'] < 9:
+        param['volume'] += 1
+        photo_path = 'icons/volume_' + str(param['volume']) + '.png'
+        photoimage_label_volume.config(file=photo_path)
+        #photoimage_button_volume_down.config(file = 'icons/volume_down.png')
+        #button_volume_down.config(status = True)
+    if param['volume'] == 9:
+        photoimage_button_volume_up.config(file = 'icons/volume_up_inactive.png')
+        #button_volume_up.config(status = False)
+    pass
+
+def fun_volume_down():
+    if param['volume'] > 0 :
+        param['volume'] -= 1
+        photo_path = 'icons/volume_' + str(param['volume']) + '.png'
+        photoimage_label_volume.config(file=photo_path)
+        #photoimage_button_volume_up.config(file = 'icons/volume_up.png')
+        #button_volume_up.config(status = True)
+    if param['volume'] == 0:
+        photoimage_button_volume_down.config(file = 'icons/volume_down_inactive.png')
+        #button_volume_down.config(status = False)
+    pass
+
+
+def fun_mute():
+    button_mute.place_forget()
+    button_unmute.place(x=pos_button_unmute[2], y=pos_button_unmute[3])
+    label_muted.place(x=pos_label_muted[2], y=pos_label_muted[3])
+    pass
+
+def fun_unmute():
+    button_unmute.place_forget()
+    button_mute.place(x=pos_button_mute[2], y=pos_button_mute[3])
+    label_muted.place_forget()
+    pass
+
+def fun_pause():
+    button_pause.place_forget()
+    button_resume.place(x=pos_button_resume[2], y=pos_button_resume[3])
+    for widget in list_widgets:
+        widget.config(bg = '#541F1F')
+        try:
+            widget.config(activebackground=widget.cget('background'))
+        except:
+            pass
+
+def fun_resume():
+    button_resume.place_forget()
+    button_pause.place(x=pos_button_pause[2], y=pos_button_pause[3])
+    for widget in list_widgets:
+        widget.config(bg = '#000000')
+        try:
+            widget.config(activebackground=widget.cget('background'))
+        except:
+            pass
+
+root = tk.Tk()
+root.config(width = pos_root[0], height = pos_root[1], bg='black')
+
+
+## 顺序不能调整，因为有图层index的逻辑关系
+photoimage_label_wifi = PhotoImage(file="icons/wifi_off.png")
+label_wifi = Label(root, text="OK", image = photoimage_label_wifi)
+#label_wifi.config(activebackground=label_wifi.cget('background'))
+label_wifi.place(x=pos_label_wifi[2], y=pos_label_wifi[3])
+label_wifi.config(width = pos_label_wifi[0], height = pos_label_wifi[1])
+
+
+
+photoimage_button_mute = PhotoImage(file="icons/button_mute.png")
+button_mute = Button(root, text="OK", command=fun_mute, image = photoimage_button_mute, bg='black')
+#button_mute.config(activebackground=button_mute.cget('background'))
+#button_mute.place(x=pos_button_mute[2], y=pos_button_mute[3])
+button_mute.config(width =pos_button_mute[0], height = pos_button_mute[1])
+
+photoimage_button_unmute = PhotoImage(file="icons/button_unmute.png")
+button_unmute = Button(root, text="OK", command=fun_unmute, image = photoimage_button_unmute, bg='black')
+button_unmute.place(x=pos_button_unmute[2], y=pos_button_unmute[3])
+button_unmute.config(width =pos_button_unmute[0], height = pos_button_unmute[1])
+
+
+
+photoimage_label_muted = PhotoImage(file="icons/label_muted.png")
+label_muted = Label(root, text="OK", image = photoimage_label_muted)
+#label_muted.place(x=pos_label_muted[2], y=pos_label_muted[3])
+label_muted.config(width = pos_label_muted[0], height = pos_label_muted[1])
+
+photoimage_label_volume = PhotoImage(file="icons/volume_0.png")
+label_volume = Label(root, text="OK", image = photoimage_label_volume)
+label_volume.place(x=pos_label_volume[2], y=pos_label_volume[3])
+label_volume.config(width = pos_label_volume[0], height = pos_label_volume[1])
+
+
+
+
+
+photoimage_button_end = PhotoImage(file="icons/button_end_meeting.png")
+button_meeting_end = Button(root, text="OK", command=fun_meeting_end, image = photoimage_button_end)
+button_meeting_end.config(width = pos_button_meeting_end[0], height = pos_button_meeting_end[1])
+
+
+
+photoimage_button_volume_down = PhotoImage(file="icons/volume_down_inactive.png")
+button_volume_down = Button(root, text="OK", command=fun_volume_down, image = photoimage_button_volume_down)
+button_volume_down.place(x=pos_button_volume_down[2], y=pos_button_volume_down[3])
+button_volume_down.config(width = pos_button_volume_down[0], height = pos_button_volume_down[1])
+
+
+
+photoimage_button_volume_up = PhotoImage(file="icons/volume_up.png")
+button_volume_up = Button(root, text="OK", command=fun_volume_up, image = photoimage_button_volume_up)
+button_volume_up.place(x=pos_button_volume_up[2], y=pos_button_volume_up[3])
+button_volume_up.config(width = pos_button_volume_up[0], height = pos_button_volume_up[1])
+
+
+photoimage_button_pause = PhotoImage(file="icons/button_pause.png")
+button_pause = Button(root, text="OK", command=fun_pause, image = photoimage_button_pause)
+button_pause.place(x=pos_button_pause[2], y=pos_button_pause[3])
+button_pause.config(width = pos_button_pause[0], height = pos_button_pause[1])
+
+photoimage_button_resume = PhotoImage(file="icons/button_resume.png")
+button_resume = Button(root, text="OK", command=fun_resume, image = photoimage_button_resume)
+#button_resume.place(x=pos_button_resume[2], y=pos_button_resume[3])
+button_resume.config(width = pos_button_resume[0], height = pos_button_resume[1])
+
+
+
+photoimage_button_start = PhotoImage(file="icons/button_start_meeting.png")
+button_meeting_start = Button(root, text="OK", command=fun_meeting_start, image = photoimage_button_start)
+button_meeting_start.place(x=pos_button_meeting_start[2], y=pos_button_meeting_start[3])
+button_meeting_start.config(width = pos_button_meeting_start[0], height = pos_button_meeting_start[1])
+
+
+
+photoimage_label_error = PhotoImage(file="icons/error_01.png")
+label_error = Label(root, text="OK", image = photoimage_label_error)
+#label_error.place(x=pos_label_error[2], y=pos_label_error[3])
+label_error.config(width = pos_label_error[0], height = pos_label_error[1])
+
+
+list_widgets = [root, label_wifi, button_mute, button_unmute, label_muted, label_volume, button_meeting_end, button_volume_down, button_volume_up, button_pause, button_resume, button_meeting_start, label_error]
+
+# change all widgets bg & activebg
+for widget in list_widgets:
+    widget.config(bg = 'black', borderwidth = 0, highlightthickness = 0)
+    try:
+        widget.config(activebackground=widget.cget('background'))
+    except:
+        pass
+
+
+root.mainloop()
+
+
+
+
+
 '''
 ## global variable
 global_var = {'meeting_status':False, 'old_time':0, 'new_time':0, 'time_str':'00:00:00', 'angle':0}
@@ -134,7 +328,7 @@ photoimage_button = PhotoImage(file="image_metal_button-1.png")
 button_cmd = Button(root, text="OK", command=fun_meeting_control, image = photoimage_button)
 button_cmd.config(activebackground=button_cmd.cget('background'))
 button_cmd.place(x=110,y=70)
-button_cmd.config(width = 100, height = 100, borderwidth = 0, highlightthickness = 0)
+button_cmd.config(width = 100, height = 100)
 
 
 ## label angle
@@ -158,86 +352,3 @@ _thread.start_new_thread(thread_udp_recv, ())
 _thread.start_new_thread(thread_time_update, ())
 #_thread.start_new_thread(thread_random_rotate, ())
 '''
-
-def fun_meeting_start():
-    #button_start.config(visible = 'no')
-    button_start.place_forget()
-    button_end.place(x=128,y=88)
-    pass
-
-def fun_meeting_end():
-    button_end.place_forget()
-    button_start.place(x=100,y=60)
-    pass
-
-def fun_mute():
-    pass
-
-root = tk.Tk()
-root.config(width = 320, height = 240, bg='black')
-
-
-##photoimage_button_wifi = PhotoImage(file="icons/wifi_off.png")
-##button_wifi = Button(root, text="OK", image = photoimage_button_wifi,bg='black',state='disable')
-##button_wifi.config(activebackground=button_wifi.cget('background'))
-##button_wifi.place(x=151,y=5)
-##button_wifi.config(width = 18, height = 18, borderwidth = 0, highlightthickness = 0)
-
-#label
-
-photoimage_label_wifi = PhotoImage(file="icons/wifi_off.png")
-label_wifi = Label(root, text="OK", image = photoimage_label_wifi,bg='black')
-label_wifi.config(activebackground=label_wifi.cget('background'))
-label_wifi.place(x=151,y=5)
-label_wifi.config(width = 18, height = 18, borderwidth = 0, highlightthickness = 0)
-
-photoimage_label_mute = PhotoImage(file="icons/label_muted.png")
-label_mute = Label(root, text="OK", image = photoimage_label_mute,bg='black')
-label_mute.config(activebackground=label_mute.cget('background'))
-label_mute.place(x=135,y=24)
-label_mute.config(width = 50, height = 50, borderwidth = 0, highlightthickness = 0)
-
-##photoimage_label_mute = PhotoImage(file="icons/label_muted.png")
-##label_mute = Label(root, text="OK", image = photoimage_label_mute,bg='black')
-##label_mute.config(activebackground=label_mute.cget('background'))
-##label_mute.place(x=128,y=69)
-##label_mute.config(width = 64, height = 16, borderwidth = 0, highlightthickness = 0)
-
-
-## button
-
-
-photoimage_button_mute = PhotoImage(file="icons/button_mute.png")
-button_mute = Button(root, text="OK", command=fun_mute, image = photoimage_button_mute, bg='black')
-button_mute.config(activebackground=button_mute.cget('background'))
-button_mute.place(x=135,y=24)
-button_mute.config(width =50, height = 50, borderwidth = 0, highlightthickness = 0)
-
-
-photoimage_button_start = PhotoImage(file="icons/button_start_meeting.png")
-button_start = Button(root, text="OK", command=fun_meeting_start, image = photoimage_button_start, bg='black')
-button_start.config(activebackground=button_start.cget('background'))
-button_start.place(x=100,y=60)
-button_start.config(width = 120, height = 120, borderwidth = 0, highlightthickness = 0)
-
-
-
-
-
-photoimage_button_end = PhotoImage(file="icons/button_end_meeting.png")
-button_end = Button(root, text="OK", command=fun_meeting_end, image = photoimage_button_end,bg='black')
-button_end.config(activebackground=button_end.cget('background'))
-#button_end.place(x=128,y=88)
-button_end.config(width = 64, height = 64, borderwidth = 0, highlightthickness = 0)
-
-
-photoimage_button_start = PhotoImage(file="icons/button_start_meeting.png")
-button_start = Button(root, text="OK", command=fun_meeting_start, image = photoimage_button_start, bg='black')
-button_start.config(activebackground=button_start.cget('background'))
-button_start.place(x=100,y=60)
-button_start.config(width = 120, height = 120, borderwidth = 0, highlightthickness = 0)
-
-
-root.mainloop()
-
-
