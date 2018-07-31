@@ -3,18 +3,31 @@
 
 import tkinter as tk
 from PIL import ImageTk, Image ## to use png format, import imageTK
-from tkinter import Button, PhotoImage, Label
+from tkinter import Button, PhotoImage, Label, Canvas
 import param
 import _thread
 import time
 import datetime
+#import platform
+import platform_check
+import shake_hand
+import udp_client
 
+
+
+
+
+def fun_meeting_start_loading():
+    param.param3['meeting_status'] = 'START_LOADING'
+    show_widget_list(list_loading)
+    udp_client.send_msg(param.msg)
+    pass
+    
 
 def fun_meeting_start():
     show_widget_list(list_meeting_start_show)
     hide_widget_list(list_meeting_start_hide)
     param.param3['meeting_status'] = 'STARTED'
-    
     ## initial time
     param.param3['old_time'] = datetime.datetime.now()
     param.param3['new_time'] = param.param3['old_time']
@@ -84,7 +97,7 @@ def fun_resume():
     show_widget_list(list_resume_show)
     hide_widget_list(list_resume_hide)
     param.param3['meeting_status'] = 'STARTED'
-    show_label_error(1231)
+    ##show_label_error(1231)
     for widget in list_all_widgets:
         widget.config(bg = '#000000')
         try:
@@ -103,9 +116,19 @@ def hide_widget_list(widget_list):
         widget.place_forget()
 
 
+
+
 def thread_update_ui():
     while 1 :
         time.sleep(1)# 1 second timer
+        print(param.msg_list_1)
+        # if ui quit, tell other threads to quit
+        try:
+            label_quit.cget(text)
+        except:
+            param.quit_msg['quit_flag'] = True
+            break
+        
         ## volume adjust hide
         if param.param1['volume_adjust_timeout'] > 0:
             param.param1['volume_adjust_timeout'] -= 1
@@ -130,13 +153,20 @@ def thread_update_ui():
             try:
                 label_time.config(text = param.param3['time_str'])
             except:
-                break # 从这里退出线程，否则线程永远关不掉
+                pass
 
 
-def show_label_error(error_code):
-    label_error.config(text = error_code)
-    label_error.place(x = pos[id(label_error)][2], y = pos[id(label_error)][3])
-
+def fun_rotate_pic():
+    while 1:
+        time.sleep(0.05)
+        try:
+            photoimage_loading_spinner.paste(image_loading_spinner.rotate(param.param3['angle']))
+            param.param3['angle'] += -20
+            aaa.delete()
+            aaa =canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
+            
+        except:
+            pass
 
 
 #ui init
@@ -196,9 +226,19 @@ photoimage_button_end = PhotoImage(file="icons/button_end_meeting.png")
 button_meeting_end = Button(root, text="OK", command=fun_meeting_end, image = photoimage_button_end)
 
 photoimage_button_start = PhotoImage(file="icons/button_start_meeting.png")
-button_meeting_start = Button(root, text="OK", command=fun_meeting_start, image = photoimage_button_start)
+button_meeting_start = Button(root, text="OK", command=fun_meeting_start_loading, image = photoimage_button_start)
 
 
+##photoimage_label_loading_spinner_background = PhotoImage(file="icons/loading_spinner_background.png")
+##label_loading_spinner_background = Label(root, text="OK", image = photoimage_label_loading_spinner_background)
+##
+##photoimage_label_loading_spinner = PhotoImage(file="icons/loading_spinner.png")
+##label_loading_spinner = Label(root, text="OK", image = photoimage_label_loading_spinner)
+
+canvas_meeting_start_loading= Canvas(root, width=120, height=120, borderwidth = 0, highlightthickness = 0, bg='black')
+canvas_meeting_end_loading= Canvas(root, width=64, height=64, borderwidth = 0, highlightthickness = 0, bg='black')
+
+label_quit = Label(root)
 
 pos = {
 ## 顺序为 width，height，x，y
@@ -213,13 +253,18 @@ id(button_meeting_end): [64, 64, 128, 88],
 id(button_pause): [50, 50, 135, 166],
 id(button_resume): [50, 50, 135, 166],
 id(label_volume): [200, 84, 60, 138],
-id(label_error): [18, 18, 146, 222],#id(label_error): [18, 18, 151, 222],
-id(label_time): [128, 16, 130, 156]
+id(label_error): [18, 18, 146, 222],
+id(label_time): [128, 16, 130, 156],
+#id(label_loading_spinner): [48, 48, 136, 96],
+#id(label_loading_spinner_background): [88, 88, 116, 76],
+id(canvas_meeting_start_loading):[120, 120, 100, 60],
+id(canvas_meeting_end_loading):[64, 64, 128, 88]
+
 }
 
 ## list of show & hide
 
-list_all_widgets = [root, label_wifi, button_mute, button_unmute, label_muted, button_pause, label_volume, button_meeting_end, button_volume_down, button_volume_up,  button_resume, button_meeting_start, label_error, label_time]
+list_all_widgets = [root, label_wifi, button_mute, button_unmute, label_muted, button_pause, label_volume, button_meeting_end, button_volume_down, button_volume_up,  button_resume, button_meeting_start, label_error, label_time, canvas_meeting_start_loading, canvas_meeting_end_loading]
 
 list_meeting_start_show = [button_mute, button_meeting_end, button_pause, label_time]
 list_meeting_start_hide = [button_unmute,  label_muted, button_resume, button_meeting_start]
@@ -242,12 +287,13 @@ list_pause_hide = [button_pause]
 list_resume_show = [button_pause]
 list_resume_hide = [button_resume]
 
-list_home = [label_wifi, button_volume_down, button_volume_up, button_meeting_start]
+list_home_show = [label_wifi, button_volume_down, button_volume_up, button_meeting_start]
 
+list_loading = [canvas_meeting_start_loading]
 
 
 # widget place
-for widget in list_home:
+for widget in list_home_show:
     widget.place(x = pos[id(widget)][2], y = pos[id(widget)][3])
     widget.config(width = pos[id(widget)][0], height = pos[id(widget)][1])
 
@@ -269,7 +315,25 @@ param.param3['new_time'] = param.param3['old_time']
 _thread.start_new_thread(thread_update_ui, ())
 
 
+_thread.start_new_thread(shake_hand.thread_run, ())
 
+
+platform_check.init(root)
+##if(platform.system() == "Linux"):
+##    root.attributes("-fullscreen", True)
+##    root.config(cursor="none")
+##    ##server = {'IP':'10.0.5.1', 'PORT':9999}
+
+image_loading_spinner = Image.open("icons/loading_spinner.png")
+image_loading_spinner_background = Image.open("icons/loading_spinner_background.png")
+photoimage_loading_spinner = ImageTk.PhotoImage(image_loading_spinner)
+photoimage_loading_spinner_background = ImageTk.PhotoImage(image_loading_spinner_background)
+canvas_meeting_start_loading.create_image(60, 60, image = photoimage_button_start)
+canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner_background)
+canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
+#canvas_meeting_start_loading.place(x = 100, y = 60)
+
+_thread.start_new_thread(fun_rotate_pic, ())
 
 root.mainloop()
 

@@ -25,12 +25,8 @@ _thread.start_new_thread(multi_thread.shake_hand, ())
 
 
 
-sysstr = platform.system()
-## adapt to raspberry pi
-if(sysstr == "Linux"):
-    root.attributes("-fullscreen", True)
-    root.config(cursor="none")
-    ##server = {'IP':'10.0.5.1', 'PORT':9999}
+
+
 
 
 
