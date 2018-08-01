@@ -12,14 +12,28 @@ import datetime
 import platform_check
 import shake_hand
 import udp_client
+import threading
+import error
+import os
 
 
+
+
+def fun_meeting_ready():
+    show_widget_list(list_bootup_greeting_show)
+    pass
+
+    
+def fun_meeting_idle():
+    hide_widget_list(list_bootup_greeting_show)
+    show_widget_list(list_home_show)
 
 
 
 def fun_meeting_start_loading():
     param.param3['meeting_status'] = 'START_LOADING'
-    show_widget_list(list_loading)
+    param.timeout['START_LOADING'] = 3
+    show_widget_list(list_start_loading)
     udp_client.send_msg(param.msg)
     pass
     
@@ -46,26 +60,26 @@ def fun_meeting_end():
 def fun_volume_up():
     #volume_adjust_show
     label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
-    photoimage_button_volume_down.config(file = 'icons/volume_down.png')
-    photoimage_button_volume_up.config(file = 'icons/volume_up.png')
+    photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
+    photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
     param.param1['volume_adjust_timeout'] = 2
     if param.param1['volume'] < 9:
         param.param1['volume'] += 1
-        photo_path = 'icons/volume_' + str(param.param1['volume']) + '.png'
-        photoimage_label_volume.config(file=photo_path)
+        photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
+        photoimage_label_volume.config(file = photo_path)
     pass
 
 
 def fun_volume_down():
     #volume_adjust_show
     label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
-    photoimage_button_volume_down.config(file = 'icons/volume_down.png')
-    photoimage_button_volume_up.config(file = 'icons/volume_up.png')
+    photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
+    photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
     param.param1['volume_adjust_timeout'] = 2
     if param.param1['volume'] > 0 :
         param.param1['volume'] -= 1
-        photo_path = 'icons/volume_' + str(param.param1['volume']) + '.png'
-        photoimage_label_volume.config(file=photo_path)
+        photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
+        photoimage_label_volume.config(file = photo_path)
     pass
 
 
@@ -115,49 +129,55 @@ def hide_widget_list(widget_list):
     for widget in widget_list:
         widget.place_forget()
 
-
-
-
-def thread_update_ui():
-    while 1 :
-        time.sleep(1)# 1 second timer
-        print(param.msg_list_1)
-        # if ui quit, tell other threads to quit
-        try:
-            label_quit.cget(text)
-        except:
-            param.quit_msg['quit_flag'] = True
-            break
-        
-        ## volume adjust hide
-        if param.param1['volume_adjust_timeout'] > 0:
-            param.param1['volume_adjust_timeout'] -= 1
-            if param.param1['volume_adjust_timeout'] == 0:
-                try:
-                    #volume_adjust_hide
-                    label_volume.place_forget()
-                    photoimage_button_volume_down.config(file = 'icons/volume_down_inactive.png')
-                    photoimage_button_volume_up.config(file = 'icons/volume_up_inactive.png')    
-                except:
-                    break # 从这里退出线程，否则线程永远关不掉
-
-        ## label time
-        if param.param3['meeting_status'] == 'PAUSED':
-            param.param3['pause_time'] += 1#这个方案可能会导致多减1秒，待后续单独开启线程任务可以解决
-        if param.param3['meeting_status'] == 'STARTED':
-            param.param3['new_time'] = datetime.datetime.now()
-            time_delta = param.param3['new_time'] - param.param3['old_time'] 
-            m, s = divmod(time_delta.seconds - param.param3['pause_time'], 60)
-            h, m = divmod(m, 60)
-            param.param3['time_str'] = '{0:02d} : {1:02d} : {2:02d}'.format(h, m, s)
+def fun_change_volume_icon():
+    if param.param1['volume_adjust_timeout'] > 0:
+        param.param1['volume_adjust_timeout'] -= 1
+        if param.param1['volume_adjust_timeout'] == 0:
             try:
-                label_time.config(text = param.param3['time_str'])
+                #volume_adjust_hide
+                label_volume.place_forget()
+                photoimage_button_volume_down.config(file = param.param1['volume_down_inactive'])
+                photoimage_button_volume_up.config(file = param.param1['volume_up_inactive'])    
             except:
                 pass
+                
+def fun_thread_quit_check():
+    # if ui quit, tell other threads to quit
+    try:
+        label_quit.cget('text')
+    except:
+        print('quit')
+        param.quit_msg['quit_flag'] = True
+        pass
+                
+def fun_update_label_time():
+    ## label time
+    if param.param3['meeting_status'] == 'PAUSED':
+        param.param3['pause_time'] += 1#这个方案可能会导致多减1秒，待后续单独开启线程任务可以解决
+    if param.param3['meeting_status'] == 'STARTED':
+        param.param3['new_time'] = datetime.datetime.now()
+        time_delta = param.param3['new_time'] - param.param3['old_time'] 
+        m, s = divmod(time_delta.seconds - param.param3['pause_time'], 60)
+        h, m = divmod(m, 60)
+        param.param3['time_str'] = '{0:02d} : {1:02d} : {2:02d}'.format(h, m, s)
+        try:
+            label_time.config(text = param.param3['time_str'])
+        except:
+            pass
+            
+
+def thread_update_ui():
+    while param.quit_msg['quit_flag'] == False :
+        time.sleep(1)# 1 second timer
+##        print(param.msg_list_1)
+        fun_thread_quit_check()
+        fun_change_volume_icon()
+        fun_update_label_time()
+
 
 
 def fun_rotate_pic():
-    while 1:
+    while param.quit_msg['quit_flag'] == False:
         time.sleep(0.05)
         try:
             photoimage_loading_spinner.paste(image_loading_spinner.rotate(param.param3['angle']))
@@ -169,47 +189,91 @@ def fun_rotate_pic():
             pass
 
 
+def thread_update_timeout():
+    while param.quit_msg['quit_flag'] == False:
+        time.sleep(1)
+        for key, value in param.timeout.items():
+            if value > 0:
+                param.timeout[key] -= 1
+        print(param.timeout)
+        pass
+
+
+
+def thread_state_machine():
+    while param.quit_msg['quit_flag'] == False:
+        time.sleep(0.1)
+        if param.param3['meeting_status'] == 'READY':
+            if param.timeout['bootup_greeting_timeout'] == 0:
+                error.error['error_code'] = error.error_code_list['ERROR_CODE_READY_TIMEOUT']
+                param.param3['meeting_status'] = 'IDLE'
+                fun_meeting_idle()
+                pass
+            elif param.msg_list_1[0] == 'SYSTEM_READY':
+                param.param3['meeting_status'] = 'IDLE'
+                fun_meeting_idle()
+                pass
+        elif param.param3['meeting_status'] == 'IDLE':
+            
+            pass
+        elif param.param3['meeting_status'] == 'START_LOADING':
+            if param.timeout['START_LOADING'] == 0:
+                param.param3['meeting_status'] = 'STARTED'            
+                fun_meeting_start()
+            pass
+        elif param.param3['meeting_status'] == 'STARTED':
+            pass
+        elif param.param3['meeting_status'] == 'END_LOADING':
+            pass
+        elif param.param3['meeting_status'] == 'END':
+            pass
+        else:
+            error.error['error_code'] = error.error_code_list['ERROR_CODE_STATE_UNKNOWN']
+            pass
+
+
+
+
 #ui init
 root = tk.Tk()
 root.config(width = 320, height = 240, bg='black')
 
 ## 顺序不能调整，因为有图层index的逻辑关系
-photoimage_label_wifi = PhotoImage(file="icons/wifi_off.png")
+photoimage_label_bootup_greeting = PhotoImage(file= param.pic_path['bootup_greeting'])
+label_bootup_greeting =  Label(root, text="OK", image = photoimage_label_bootup_greeting, bg = 'black')
+
+photoimage_label_wifi = PhotoImage(file= param.pic_path['wifi_off'])
 label_wifi = Label(root, text="OK", image = photoimage_label_wifi)
-#label_wifi.config(activebackground=label_wifi.cget('background'))
-#label_wifi.place(x=pos_label_wifi[2], y=pos_label_wifi[3])
-#label_wifi.config(width = pos_label_wifi[0], height = pos_label_wifi[1])
 
 
-
-photoimage_button_mute = PhotoImage(file="icons/button_mute.png")
+photoimage_button_mute = PhotoImage(file= param.pic_path['button_mute'])
 button_mute = Button(root, text="OK", command=fun_mute, image = photoimage_button_mute, bg='black')
 
-photoimage_button_unmute = PhotoImage(file="icons/button_unmute.png")
+photoimage_button_unmute = PhotoImage(file= param.pic_path['button_unmute'])
 button_unmute = Button(root, text="OK", command=fun_unmute, image = photoimage_button_unmute, bg='black')
 
 
 
-photoimage_label_muted = PhotoImage(file="icons/label_muted.png")
+photoimage_label_muted = PhotoImage(file= param.pic_path['label_muted'])
 label_muted = Label(root, text="OK", image = photoimage_label_muted)
 
 
-photoimage_button_volume_down = PhotoImage(file="icons/volume_down_inactive.png")
+photoimage_button_volume_down = PhotoImage(file= param.pic_path['volume_down_inactive'])
 button_volume_down = Button(root, text="OK", command=fun_volume_down, image = photoimage_button_volume_down)
 
-photoimage_button_volume_up = PhotoImage(file="icons/volume_up_inactive.png")
+photoimage_button_volume_up = PhotoImage(file=param.pic_path['volume_up_inactive'])
 button_volume_up = Button(root, text="OK", command=fun_volume_up, image = photoimage_button_volume_up)
 
 
-photoimage_label_volume = PhotoImage(file="icons/volume_0.png")
+photoimage_label_volume = PhotoImage(file=param.pic_path['volume_']+'0.png')
 label_volume = Label(root, text="OK", image = photoimage_label_volume)
 
 
-photoimage_button_pause = PhotoImage(file="icons/button_pause.png")
+photoimage_button_pause = PhotoImage(file=param.pic_path['button_pause'])
 button_pause = Button(root, text="OK", command=fun_pause, image = photoimage_button_pause)
 
 
-photoimage_button_resume = PhotoImage(file="icons/button_resume.png")
+photoimage_button_resume = PhotoImage(file=param.pic_path['button_resume'])
 button_resume = Button(root, text="OK", command=fun_resume, image = photoimage_button_resume)
 
 
@@ -222,10 +286,10 @@ label_error = Label(root, text="01", font='Arial 10 bold', fg = 'red')
 
 
 
-photoimage_button_end = PhotoImage(file="icons/button_end_meeting.png")
+photoimage_button_end = PhotoImage(file=param.pic_path['button_end_meeting'])
 button_meeting_end = Button(root, text="OK", command=fun_meeting_end, image = photoimage_button_end)
 
-photoimage_button_start = PhotoImage(file="icons/button_start_meeting.png")
+photoimage_button_start = PhotoImage(file=param.pic_path['button_start_meeting'])
 button_meeting_start = Button(root, text="OK", command=fun_meeting_start_loading, image = photoimage_button_start)
 
 
@@ -238,7 +302,7 @@ button_meeting_start = Button(root, text="OK", command=fun_meeting_start_loading
 canvas_meeting_start_loading= Canvas(root, width=120, height=120, borderwidth = 0, highlightthickness = 0, bg='black')
 canvas_meeting_end_loading= Canvas(root, width=64, height=64, borderwidth = 0, highlightthickness = 0, bg='black')
 
-label_quit = Label(root)
+label_quit = Label(root, text='hi')
 
 pos = {
 ## 顺序为 width，height，x，y
@@ -255,19 +319,21 @@ id(button_resume): [50, 50, 135, 166],
 id(label_volume): [200, 84, 60, 138],
 id(label_error): [18, 18, 146, 222],
 id(label_time): [128, 16, 130, 156],
-#id(label_loading_spinner): [48, 48, 136, 96],
-#id(label_loading_spinner_background): [88, 88, 116, 76],
+id(label_bootup_greeting):[200, 84, 60, 78],
 id(canvas_meeting_start_loading):[120, 120, 100, 60],
-id(canvas_meeting_end_loading):[64, 64, 128, 88]
-
+id(canvas_meeting_end_loading):[64, 64, 128, 88],
+id(label_quit):[0,0,0,0]
 }
 
 ## list of show & hide
 
 list_all_widgets = [root, label_wifi, button_mute, button_unmute, label_muted, button_pause, label_volume, button_meeting_end, button_volume_down, button_volume_up,  button_resume, button_meeting_start, label_error, label_time, canvas_meeting_start_loading, canvas_meeting_end_loading]
 
+list_bootup_greeting_show = [label_bootup_greeting]
+
+
 list_meeting_start_show = [button_mute, button_meeting_end, button_pause, label_time]
-list_meeting_start_hide = [button_unmute,  label_muted, button_resume, button_meeting_start]
+list_meeting_start_hide = [canvas_meeting_start_loading, label_bootup_greeting, button_unmute,  label_muted, button_resume, button_meeting_start]
 
 list_meeting_end_show = [button_meeting_start]
 list_meeting_end_hide = [button_unmute, label_muted, button_resume, button_mute, button_meeting_end, button_pause, label_time]
@@ -289,13 +355,14 @@ list_resume_hide = [button_resume]
 
 list_home_show = [label_wifi, button_volume_down, button_volume_up, button_meeting_start]
 
-list_loading = [canvas_meeting_start_loading]
-
+list_start_loading = [canvas_meeting_start_loading]
 
 # widget place
-for widget in list_home_show:
-    widget.place(x = pos[id(widget)][2], y = pos[id(widget)][3])
-    widget.config(width = pos[id(widget)][0], height = pos[id(widget)][1])
+
+    
+
+### widget place
+
 
 ### change all widgets bg & activebg
 for widget in list_all_widgets:
@@ -319,13 +386,9 @@ _thread.start_new_thread(shake_hand.thread_run, ())
 
 
 platform_check.init(root)
-##if(platform.system() == "Linux"):
-##    root.attributes("-fullscreen", True)
-##    root.config(cursor="none")
-##    ##server = {'IP':'10.0.5.1', 'PORT':9999}
 
-image_loading_spinner = Image.open("icons/loading_spinner.png")
-image_loading_spinner_background = Image.open("icons/loading_spinner_background.png")
+image_loading_spinner = Image.open(param.pic_path['loading_spinner'])
+image_loading_spinner_background = Image.open(param.pic_path['loading_spinner_background'])
 photoimage_loading_spinner = ImageTk.PhotoImage(image_loading_spinner)
 photoimage_loading_spinner_background = ImageTk.PhotoImage(image_loading_spinner_background)
 canvas_meeting_start_loading.create_image(60, 60, image = photoimage_button_start)
@@ -334,6 +397,13 @@ canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spi
 #canvas_meeting_start_loading.place(x = 100, y = 60)
 
 _thread.start_new_thread(fun_rotate_pic, ())
+_thread.start_new_thread(thread_state_machine, ())
+
+_thread.start_new_thread(thread_update_timeout, ())
+
+
+fun_meeting_ready()
+
 
 root.mainloop()
 
@@ -342,3 +412,20 @@ root.mainloop()
 
 
 
+
+##class class_loading_image():
+##    def fun_rotate_pic():
+##        while 1:
+##            time.sleep(0.05)
+##            try:
+##                photoimage_loading_spinner.paste(image_loading_spinner.rotate(param.param3['angle']))
+##                param.param3['angle'] += -20
+##                aaa.delete()
+##                aaa =canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
+##                
+##            except:
+##                pass
+##    canvas_meeting_start_loading= Canvas(root, width=120, height=120, borderwidth = 0, highlightthickness = 0, bg='black')
+##    canvas_meeting_start_loading.create_image(60, 60, image = photoimage_button_start)
+##    canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner_background)
+##    canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
