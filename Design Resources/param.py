@@ -2,7 +2,7 @@ import platform
 
 if(platform.system() == "Linux"):
     server = {'IP':'10.0.5.1', 'PORT':9999}
-    param.pic_dir = 'icons/'
+    pic_dir = 'icons/'
 else:
     pic_dir = 'C:/Users/Lidong/Dropbox (Melo)/Dropbox/Melo/GitHub/raspi_python_code/Design Resources/icons/'
 

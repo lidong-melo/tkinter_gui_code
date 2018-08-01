@@ -226,6 +226,16 @@ def thread_state_machine():
             param.button_click['volume_up'] = False
             fun_update_ui('set_to_vol_up')
             
+        if param.button_click['mute'] == True:#vol+ button click
+            param.button_click['mute'] = False
+            fun_update_ui('set_to_mute')
+            udp_client.send_msg(param.msg)
+        
+        if param.button_click['unmute'] == True:#vol+ button click
+            param.button_click['unmute'] = False
+            fun_update_ui('set_to_unmute')
+            udp_client.send_msg(param.msg)
+            
         if param.param3['meeting_status'] == 'READY':
             if param.timeout['bootup_greeting_timeout'] == 0:
                 error.error_handler('ERROR_CODE_READY_TIMEOUT')# timeout, report error
@@ -296,6 +306,7 @@ def thread_state_machine():
             pass
             if param.button_click['resume'] == True:#resume button click
                 param.button_click['resume'] = False
+                param.param3['meeting_status'] = 'STARTED'
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_resume')
             pass
@@ -359,7 +370,7 @@ photoimage_button_volume_up = PhotoImage(file=param.pic_path['volume_up_inactive
 button_volume_up = Button(root, text="OK", command=lambda: button_click(button_id= 'volume_up'), image = photoimage_button_volume_up)
 
 
-photoimage_label_volume = PhotoImage(file=param.pic_path['volume_']+'0.png')
+photoimage_label_volume = PhotoImage(file=param.pic_path['volume_']+'5.png')
 label_volume = Label(root, text="OK", image = photoimage_label_volume)
 
 
