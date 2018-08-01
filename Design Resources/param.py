@@ -18,10 +18,12 @@ msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
 msg_list_1 = ['SYSTEM_NOT_READY']
 
-timeout = {'bootup_greeting_timeout':5, 'meeting_ready_timeout': 0}
+timeout = {'bootup_greeting_timeout':2, 'meeting_ready_timeout': 0}
 
 quit_msg = {'quit_flag':False, 'quit_code': 0, 'quit_timeout': 0, 'quit_cmd':False}
 
+
+button_click = {'start_meeting':False, 'end_meeting':False, 'mute':False, 'unmute':False, 'pause':False, 'resume':False, 'volume_up':False, 'volume_down':False}
 
 pic_path = {
 'bootup_greeting': pic_dir+'bootup_greeting.png',

@@ -17,43 +17,74 @@ import param
 import error
 import os
 
+def change_all_widgets_bg(bg_color):
+    ### change all widgets bg & activebg
+    for widget in list_all_widgets:
+        widget.config(bg = bg_color, borderwidth = 0, highlightthickness = 0)
+        try:
+            widget.config(activebackground = widget.cget('background'))
+        except:
+            pass
 
+
+def button_click(button_id):
+     if button_id == 'start_meeting':
+        param.button_click['start_meeting'] = True
+        pass
+     elif button_id == 'end_meeting':
+        param.button_click['end_meeting'] = True
+        pass
+     elif button_id == 'pause':
+        param.button_click['pause'] = True
+        pass
+     elif button_id == 'resume':
+        param.button_click['resume'] = True
+        pass
+     elif button_id == 'mute':
+        param.button_click['mute'] = True
+        pass
+     elif button_id == 'unmute':
+        param.button_click['unmute'] = True
+        pass
+     elif button_id == 'volume_up':
+        param.button_click['volume_up'] = True
+        pass
+     elif button_id == 'volume_down':
+        param.button_click['volume_down'] = True
+        pass
+
+
+        
+            
 def fun_update_ui(flag):
     if flag == 'set_to_ready':
         show_widget_list(list_bootup_greeting_show)
+        
     elif flag == 'set_to_idle':
         hide_widget_list(list_bootup_greeting_show)
         show_widget_list(list_home_show)
+        
     elif flag == 'set_to_start_loading':
-        param.param3['meeting_status'] = 'START_LOADING'# 不要再这里做
-        param.timeout['START_LOADING'] = 3# 不要再这里做
         show_widget_list(list_start_loading)
-        udp_client.send_msg(param.msg)# 不要再这里做
-        param.ui_flag['loading_flag'] = True    
-    elif flag == 'set_to_start':
+        param.ui_flag['loading_flag'] = True
+        
+    elif flag == 'set_to_started':
+        fun_update_label_time()
+        change_all_widgets_bg('#000000')
         show_widget_list(list_meeting_start_show)
         hide_widget_list(list_meeting_start_hide)
-        param.param3['meeting_status'] = 'STARTED'# 不要再这里做
         param.ui_flag['loading_flag'] = False
-        ## initial time
-        param.param3['old_time'] = datetime.datetime.now()# 不要再这里做
-        param.param3['new_time'] = param.param3['old_time']# 不要再这里做
-        param.param3['pause_time'] = 0
+
     elif flag == 'set_to_end_loading':
-        pass
+        show_widget_list(list_end_loading)
+        param.ui_flag['loading_flag'] = True 
+
     elif flag == 'set_to_end':
-        #fun_resume()# 不要再这里做
-        #恢复pause和mute带来的影响
-        for widget in list_all_widgets:
-            widget.config(bg = '#000000')
-            try:
-                widget.config(activebackground=widget.cget('background'))
-            except:
-                pass
+        change_all_widgets_bg('#000000')
+        hide_widget_list(list_resume_hide)
         show_widget_list(list_meeting_end_show)
         hide_widget_list(list_meeting_end_hide)
-        param.param3['time_str'] = '00 : 00 : 00'# 不要再这里做
-        param.param3['meeting_status'] = 'END'  # 不要再这里做  
+        param.ui_flag['loading_flag'] = False           
         
     elif flag == 'set_to_vol_up':
             #volume_adjust_show
@@ -65,6 +96,7 @@ def fun_update_ui(flag):
             param.param1['volume'] += 1
             photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
             photoimage_label_volume.config(file = photo_path)
+            
     elif flag == 'set_to_vol_down':
         #volume_adjust_show
         label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
@@ -75,30 +107,21 @@ def fun_update_ui(flag):
             param.param1['volume'] -= 1
             photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
             photoimage_label_volume.config(file = photo_path)
+            
     elif flag == 'set_to_pause':
         show_widget_list(list_pause_show)
         hide_widget_list(list_pause_hide)
-        param.param3['meeting_status'] = 'PAUSED'
-        for widget in list_all_widgets:
-            widget.config(bg = '#541F1F')
-            try:
-                widget.config(activebackground=widget.cget('background'))
-            except:
-                pass
+        change_all_widgets_bg('#541F1F')
+        
     elif flag == 'set_to_resume':
         show_widget_list(list_resume_show)
         hide_widget_list(list_resume_hide)
-        param.param3['meeting_status'] = 'STARTED'
-        ##show_label_error(1231)
-        for widget in list_all_widgets:
-            widget.config(bg = '#000000')
-            try:
-                widget.config(activebackground=widget.cget('background'))
-            except:
-                pass
+        change_all_widgets_bg('#000000')
+        
     elif flag == 'set_to_mute':
         show_widget_list(list_mute_show)
         hide_widget_list(list_mute_hide)
+        
     elif flag == 'set_to_unmute':
         show_widget_list(list_unmute_show)
         hide_widget_list(list_unmute_hide)
@@ -151,12 +174,7 @@ def fun_update_label_time():
         try:
             label_time.config(text = param.param3['time_str'])
         except:
-            pass
-    if param.param3['meeting_status'] == 'IDLE':
-        try:
-            label_time.config(text = param.param3['time_str'])
-        except:
-            pass            
+            pass          
 
     
             
@@ -181,7 +199,6 @@ def fun_rotate_pic():
                 aaa =canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
                 
             except:
-                print('rotate')
                 pass
 
 
@@ -191,43 +208,123 @@ def thread_update_timeout():
         for key, value in param.timeout.items():
             if value > 0:
                 param.timeout[key] -= 1
-        print('timeout',param.timeout)
         pass
 
 
 
 def thread_state_machine():
     while param.quit_msg['quit_flag'] == False:
-        time.sleep(0.1)
+        time.sleep(0.02)
+        if param.msg_list_1[0].find('error') != -1:# tx2 报错
+            error.error_handler('ERROR_CODE_TX2_ERROR')
+
+        if param.button_click['volume_down'] == True:#vol- button click
+            param.button_click['volume_down'] = False
+            fun_update_ui('set_to_vol_down')
+
+        if param.button_click['volume_up'] == True:#vol+ button click
+            param.button_click['volume_up'] = False
+            fun_update_ui('set_to_vol_up')
+            
         if param.param3['meeting_status'] == 'READY':
             if param.timeout['bootup_greeting_timeout'] == 0:
-                error.error['error_code'] = error.error_code_list['ERROR_CODE_READY_TIMEOUT']
+                error.error_handler('ERROR_CODE_READY_TIMEOUT')# timeout, report error
+                
+                ## just for debug #调试用，后续删掉
                 param.param3['meeting_status'] = 'IDLE'
                 fun_update_ui('set_to_idle')
-                pass
-            elif param.msg_list_1[0] == 'SYSTEM_READY':
+
+            elif param.msg_list_1[0] == 'system_ready':#recv msg from tx2
                 param.param3['meeting_status'] = 'IDLE'
                 fun_update_ui('set_to_idle')
-                pass
+
         elif param.param3['meeting_status'] == 'IDLE':
-            
-            pass
+            # 按键启动会议
+            if param.button_click['start_meeting'] == True:#start button click
+                param.button_click['start_meeting'] = False
+                param.timeout['START_LOADING'] = 3
+                param.param3['meeting_status'] = 'START_LOADING'
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_start_loading')
+
         elif param.param3['meeting_status'] == 'START_LOADING':
             if param.timeout['START_LOADING'] == 0:
-                param.param3['meeting_status'] = 'STARTED'            
-                #fun_set_meeting_to_start()
-                fun_update_ui('set_to_start')
-            pass
+                error.error_handler('ERROR_CODE_START_MEETING_TIMEOUT')# timeout, report error
+                
+                ##--> just for debug #调试用，后续删掉
+                param.param3['meeting_status'] = 'STARTED'
+                param.param3['old_time'] = datetime.datetime.now()
+                param.param3['new_time'] = param.param3['old_time']
+                param.param3['pause_time'] = 0
+                param.param3['time_str'] = '00 : 00 : 00'
+                fun_update_ui('set_to_started')
+                ##<--
+            elif param.msg_list_1[0] == 'meeting_started':#recv msg from tx2
+                param.param3['meeting_status'] = 'STARTED'
+                fun_update_ui('set_to_started')
+                ## initial time
+                param.param3['old_time'] = datetime.datetime.now()
+                param.param3['new_time'] = param.param3['old_time']
+                param.param3['pause_time'] = 0
+                param.param3['time_str'] = '00 : 00 : 00'
+
+                
         elif param.param3['meeting_status'] == 'STARTED':
+            if param.button_click['end_meeting'] == True:#end button click
+                param.button_click['end_meeting'] = False
+                param.timeout['END_LOADING'] = 3
+                param.param3['meeting_status'] = 'END_LOADING'
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_end_loading')
             pass
+            
+            if param.button_click['pause'] == True:#pause button click
+                param.button_click['pause'] = False
+                udp_client.send_msg(param.msg)
+                param.param3['meeting_status'] = 'PAUSED'
+                fun_update_ui('set_to_pause')
+            pass
+            
+
+        elif param.param3['meeting_status'] == 'PAUSED':
+            if param.button_click['end_meeting'] == True:#end button click
+                param.button_click['end_meeting'] = False
+                param.timeout['END_LOADING'] = 3
+                param.param3['meeting_status'] = 'END_LOADING'
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_end_loading')
+            pass
+            if param.button_click['resume'] == True:#resume button click
+                param.button_click['resume'] = False
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_resume')
+            pass
+        
         elif param.param3['meeting_status'] == 'END_LOADING':
-            pass
+            if param.timeout['END_LOADING'] == 0:
+                error.error_handler('ERROR_CODE_END_MEETING_TIMEOUT')# timeout, report error
+                
+                ##--> just for debug #调试用，后续删掉
+                param.param3['meeting_status'] = 'END'
+                fun_update_ui('set_to_end')
+                ##<--
+            elif param.msg_list_1[0] == 'meeting_end':#recv msg from tx2
+                param.param3['meeting_status'] = 'END'
+                fun_update_ui('set_to_end')
+                
         elif param.param3['meeting_status'] == 'END':
-            pass
+            param.param3['meeting_status'] = 'IDLE'
+            fun_update_ui('set_to_idle')
+            # 清空之前的按键事件缓存
+            for key, value in param.button_click.items():
+                param.button_click[key] = False
+        
         else:
             error.error['error_code'] = error.error_code_list['ERROR_CODE_STATE_UNKNOWN']
             pass
+            
 
+            
 
 
 
@@ -244,10 +341,10 @@ label_wifi = Label(root, text="OK", image = photoimage_label_wifi)
 
 
 photoimage_button_mute = PhotoImage(file= param.pic_path['button_mute'])
-button_mute = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_mute'), image = photoimage_button_mute, bg='black')
+button_mute = Button(root, text="OK", command=lambda: button_click(button_id= 'mute'), image = photoimage_button_mute, bg='black')
 
 photoimage_button_unmute = PhotoImage(file= param.pic_path['button_unmute'])
-button_unmute = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_unmute'), image = photoimage_button_unmute, bg='black')
+button_unmute = Button(root, text="OK", command=lambda: button_click(button_id= 'unmute'), image = photoimage_button_unmute, bg='black')
 
 
 
@@ -256,10 +353,10 @@ label_muted = Label(root, text="OK", image = photoimage_label_muted)
 
 
 photoimage_button_volume_down = PhotoImage(file= param.pic_path['volume_down_inactive'])
-button_volume_down = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_vol_down'), image = photoimage_button_volume_down)
+button_volume_down = Button(root, text="OK", command=lambda: button_click(button_id= 'volume_down'), image = photoimage_button_volume_down)
 
 photoimage_button_volume_up = PhotoImage(file=param.pic_path['volume_up_inactive'])
-button_volume_up = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_vol_up'), image = photoimage_button_volume_up)
+button_volume_up = Button(root, text="OK", command=lambda: button_click(button_id= 'volume_up'), image = photoimage_button_volume_up)
 
 
 photoimage_label_volume = PhotoImage(file=param.pic_path['volume_']+'0.png')
@@ -267,11 +364,11 @@ label_volume = Label(root, text="OK", image = photoimage_label_volume)
 
 
 photoimage_button_pause = PhotoImage(file=param.pic_path['button_pause'])
-button_pause = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_pause'), image = photoimage_button_pause)
+button_pause = Button(root, text="OK", command=lambda: button_click(button_id= 'pause'), image = photoimage_button_pause)
 
 
 photoimage_button_resume = PhotoImage(file=param.pic_path['button_resume'])
-button_resume = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_resume'), image = photoimage_button_resume)
+button_resume = Button(root, text="OK", command=lambda: button_click(button_id= 'resume'), image = photoimage_button_resume)
 
 
 label_time = Label(root, text="00 : 00 : 00", font='Arial 9 bold', fg = 'white')
@@ -279,15 +376,15 @@ label_time = Label(root, text="00 : 00 : 00", font='Arial 9 bold', fg = 'white')
 
 #photoimage_label_error = PhotoImage(file="icons/error_01.png")
 #label_error = Label(root, text="OK", image = photoimage_label_error)
-label_error = Label(root, text="01", font='Arial 10 bold', fg = 'red')
+label_error = Label(root, text="01", font='Arial 10 bold', bg = 'red', fg = 'white')
 
 
 
 photoimage_button_end = PhotoImage(file=param.pic_path['button_end_meeting'])
-button_meeting_end = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_end'), image = photoimage_button_end)
+button_meeting_end = Button(root, text="OK", command=lambda: button_click(button_id= 'end_meeting'), image = photoimage_button_end)
 
 photoimage_button_start = PhotoImage(file=param.pic_path['button_start_meeting'])
-button_meeting_start = Button(root, text="OK", command=lambda: fun_update_ui(flag= 'set_to_start_loading'), image = photoimage_button_start)
+button_meeting_start = Button(root, text="OK", command=lambda: button_click(button_id= 'start_meeting'), image = photoimage_button_start)
 
 
 ##photoimage_label_loading_spinner_background = PhotoImage(file="icons/loading_spinner_background.png")
@@ -296,8 +393,8 @@ button_meeting_start = Button(root, text="OK", command=lambda: fun_update_ui(fla
 ##photoimage_label_loading_spinner = PhotoImage(file="icons/loading_spinner.png")
 ##label_loading_spinner = Label(root, text="OK", image = photoimage_label_loading_spinner)
 
-canvas_meeting_start_loading= Canvas(root, width=120, height=120, borderwidth = 0, highlightthickness = 0, bg='black')
-canvas_meeting_end_loading= Canvas(root, width=64, height=64, borderwidth = 0, highlightthickness = 0, bg='black')
+canvas_meeting_start_loading= Canvas(root, width=120, height=120)
+canvas_meeting_end_loading= Canvas(root, width=64, height=64)
 
 label_quit = Label(root, text='hi')
 
@@ -333,7 +430,7 @@ list_meeting_start_show = [button_mute, button_meeting_end, button_pause, label_
 list_meeting_start_hide = [canvas_meeting_start_loading, label_bootup_greeting, button_unmute,  label_muted, button_resume, button_meeting_start]
 
 list_meeting_end_show = [button_meeting_start]
-list_meeting_end_hide = [button_unmute, label_muted, button_resume, button_mute, button_meeting_end, button_pause, label_time]
+list_meeting_end_hide = [canvas_meeting_end_loading, button_unmute, label_muted, button_resume, button_mute, button_meeting_end, button_pause, label_time]
 
 list_volume_adjust_show = [label_volume]
 list_volume_adjust_hide = [label_volume]
@@ -353,21 +450,14 @@ list_resume_hide = [button_resume]
 list_home_show = [label_wifi, button_volume_down, button_volume_up, button_meeting_start]
 
 list_start_loading = [canvas_meeting_start_loading]
-
-# widget place
+list_end_loading = [canvas_meeting_end_loading]
 
     
 
 ### widget place
+change_all_widgets_bg('#000000')
 
 
-### change all widgets bg & activebg
-for widget in list_all_widgets:
-    widget.config(bg = 'black', borderwidth = 0, highlightthickness = 0)
-    try:
-        widget.config(activebackground=widget.cget('background'))
-    except:
-        pass
 
 
 # get current time
@@ -391,7 +481,10 @@ photoimage_loading_spinner_background = ImageTk.PhotoImage(image_loading_spinner
 canvas_meeting_start_loading.create_image(60, 60, image = photoimage_button_start)
 canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner_background)
 canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
-#canvas_meeting_start_loading.place(x = 100, y = 60)
+
+canvas_meeting_end_loading.create_image(32, 32, image = photoimage_button_end)
+canvas_meeting_end_loading.create_image(32, 32, image = photoimage_loading_spinner_background)
+canvas_meeting_end_loading.create_image(32, 32, image = photoimage_loading_spinner)
 
 _thread.start_new_thread(fun_rotate_pic, ())
 _thread.start_new_thread(thread_state_machine, ())

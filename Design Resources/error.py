@@ -18,5 +18,13 @@ error_code_list = {
 'ERROR_CODE_NETWORK_ERROR':14,
 'ERROR_CODE_AUDIO_IN_ERROR':15,
 'ERROR_CODE_AUDIO_OUT_ERROR':16,
+'ERROR_CODE_TX2_ERROR':51,
 'ERROR_CODE_STATE_UNKNOWN': 99
 }
+
+
+def error_handler(error_code):
+    error['error_code'] = error_code
+    
+    
+    
