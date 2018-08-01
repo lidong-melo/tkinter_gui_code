@@ -4,15 +4,16 @@
 import tkinter as tk
 from PIL import ImageTk, Image ## to use png format, import imageTK
 from tkinter import Button, PhotoImage, Label, Canvas
-import param
 import _thread
 import time
 import datetime
-#import platform
+
+
+
 import platform_check
 import shake_hand
 import udp_client
-import threading
+import param
 import error
 import os
 
@@ -35,6 +36,7 @@ def fun_meeting_start_loading():
     param.timeout['START_LOADING'] = 3
     show_widget_list(list_start_loading)
     udp_client.send_msg(param.msg)
+    param.ui_flag['loading_flag'] = True
     pass
     
 
@@ -45,6 +47,7 @@ def fun_meeting_start():
     ## initial time
     param.param3['old_time'] = datetime.datetime.now()
     param.param3['new_time'] = param.param3['old_time']
+    param.ui_flag['loading_flag'] = False
     pass
 
 
@@ -169,7 +172,6 @@ def fun_update_label_time():
 def thread_update_ui():
     while param.quit_msg['quit_flag'] == False :
         time.sleep(1)# 1 second timer
-##        print(param.msg_list_1)
         fun_thread_quit_check()
         fun_change_volume_icon()
         fun_update_label_time()
@@ -179,14 +181,16 @@ def thread_update_ui():
 def fun_rotate_pic():
     while param.quit_msg['quit_flag'] == False:
         time.sleep(0.05)
-        try:
-            photoimage_loading_spinner.paste(image_loading_spinner.rotate(param.param3['angle']))
-            param.param3['angle'] += -20
-            aaa.delete()
-            aaa =canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
-            
-        except:
-            pass
+        if param.ui_flag['loading_flag'] == True:
+            try:
+                photoimage_loading_spinner.paste(image_loading_spinner.rotate(param.param3['angle']))
+                param.param3['angle'] += -20
+                aaa.delete()
+                aaa =canvas_meeting_start_loading.create_image(60, 60, image = photoimage_loading_spinner)
+                
+            except:
+                print('rotate')
+                pass
 
 
 def thread_update_timeout():
@@ -195,7 +199,7 @@ def thread_update_timeout():
         for key, value in param.timeout.items():
             if value > 0:
                 param.timeout[key] -= 1
-        print(param.timeout)
+        print('timeout',param.timeout)
         pass
 
 

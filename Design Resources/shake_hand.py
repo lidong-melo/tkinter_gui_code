@@ -12,7 +12,6 @@ def thread_run():
             error.error['error_code'] = error.error_code_list['ERROR_CODE_SHAKE_TIMEOUT']
             error.error['error_flag'] = True
             param.msg_list_1.append([error.error['error_flag'], error.error['error_code']])
-            print('timeout!')
             
 
         
