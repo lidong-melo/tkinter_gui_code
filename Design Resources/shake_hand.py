@@ -1,6 +1,7 @@
 import time
 import param
 import error
+import udp_client
         
 
 def thread_run():
@@ -11,8 +12,4 @@ def thread_run():
             param.param1['shake_timeout'] = 0
             error.error['error_code'] = error.error_code_list['ERROR_CODE_SHAKE_TIMEOUT']
             error.error['error_flag'] = True
-            param.msg_list_1.append([error.error['error_flag'], error.error['error_code']])
-            
-
-        
-        
+            #param.msg_list_1.append([error.error['error_flag'], error.error['error_code']])

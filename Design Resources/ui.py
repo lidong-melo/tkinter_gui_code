@@ -185,6 +185,9 @@ def thread_update_ui():
         fun_thread_quit_check()
         fun_change_volume_icon()
         fun_update_label_time()
+        # in mode ready: every second send ready to tx2
+        if param.param3['meeting_status'] == 'READY':
+            udp_client.send_msg('RASPI_IS_READY')
 
 
 
@@ -215,9 +218,12 @@ def thread_update_timeout():
 def thread_state_machine():
     while param.quit_msg['quit_flag'] == False:
         time.sleep(0.02)
-        if param.msg_list_1[0].find('error') != -1:# tx2 报错
+        
+        if param.tx2_ack['ERROR_CODE'] != 0:# tx2 报错
+            param.tx2_ack['ERROR_CODE'] = 0
             error.error_handler('ERROR_CODE_TX2_ERROR')
-
+        
+        #button
         if param.button_click['volume_down'] == True:#vol- button click
             param.button_click['volume_down'] = False
             fun_update_ui('set_to_vol_down')
@@ -235,7 +241,9 @@ def thread_state_machine():
             param.button_click['unmute'] = False
             fun_update_ui('set_to_unmute')
             udp_client.send_msg(param.msg)
-            
+        
+        
+        #ready
         if param.param3['meeting_status'] == 'READY':
             if param.timeout['bootup_greeting_timeout'] == 0:
                 error.error_handler('ERROR_CODE_READY_TIMEOUT')# timeout, report error
@@ -244,19 +252,23 @@ def thread_state_machine():
                 param.param3['meeting_status'] = 'IDLE'
                 fun_update_ui('set_to_idle')
 
-            elif param.msg_list_1[0] == 'system_ready':#recv msg from tx2
+            elif param.tx2_ack['SYSTEM_IS_READY'] == True:#recv msg from tx2
+                param.tx2_ack['SYSTEM_IS_READY'] = False
                 param.param3['meeting_status'] = 'IDLE'
                 fun_update_ui('set_to_idle')
 
+                
+        #idle
         elif param.param3['meeting_status'] == 'IDLE':
             # 按键启动会议
             if param.button_click['start_meeting'] == True:#start button click
                 param.button_click['start_meeting'] = False
-                param.timeout['START_LOADING'] = 3
+                #param.timeout['START_LOADING'] = 3
                 param.param3['meeting_status'] = 'START_LOADING'
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_start_loading')
 
+        #start loading
         elif param.param3['meeting_status'] == 'START_LOADING':
             if param.timeout['START_LOADING'] == 0:
                 error.error_handler('ERROR_CODE_START_MEETING_TIMEOUT')# timeout, report error
@@ -269,7 +281,8 @@ def thread_state_machine():
                 param.param3['time_str'] = '00 : 00 : 00'
                 fun_update_ui('set_to_started')
                 ##<--
-            elif param.msg_list_1[0] == 'meeting_started':#recv msg from tx2
+            elif param.tx2_ack['MEETING_IS_STARTED'] == True:#recv msg from tx2
+                param.tx2_ack['MEETING_IS_STARTED'] = False
                 param.param3['meeting_status'] = 'STARTED'
                 fun_update_ui('set_to_started')
                 ## initial time
@@ -278,39 +291,51 @@ def thread_state_machine():
                 param.param3['pause_time'] = 0
                 param.param3['time_str'] = '00 : 00 : 00'
 
-                
+        #started        
         elif param.param3['meeting_status'] == 'STARTED':
-            if param.button_click['end_meeting'] == True:#end button click
-                param.button_click['end_meeting'] = False
-                param.timeout['END_LOADING'] = 3
+            if param.tx2_ack['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                param.tx2_ack['TX2_END_MEETING'] = False
+                #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
-            pass
+                
+            if param.button_click['end_meeting'] == True:#end button click
+                param.button_click['end_meeting'] = False
+                #param.timeout['END_LOADING'] = 3
+                param.param3['meeting_status'] = 'END_LOADING'
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_end_loading')
             
             if param.button_click['pause'] == True:#pause button click
                 param.button_click['pause'] = False
                 udp_client.send_msg(param.msg)
                 param.param3['meeting_status'] = 'PAUSED'
                 fun_update_ui('set_to_pause')
-            pass
             
-
+        #paused
         elif param.param3['meeting_status'] == 'PAUSED':
-            if param.button_click['end_meeting'] == True:#end button click
-                param.button_click['end_meeting'] = False
-                param.timeout['END_LOADING'] = 3
+            if param.tx2_ack['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                param.tx2_ack['TX2_END_MEETING'] = False
+                #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
-            pass
+                
+            if param.button_click['end_meeting'] == True:#end button click
+                param.button_click['end_meeting'] = False
+                #param.timeout['END_LOADING'] = 3
+                param.param3['meeting_status'] = 'END_LOADING'
+                udp_client.send_msg(param.msg)
+                fun_update_ui('set_to_end_loading')
+
             if param.button_click['resume'] == True:#resume button click
                 param.button_click['resume'] = False
                 param.param3['meeting_status'] = 'STARTED'
                 udp_client.send_msg(param.msg)
-                fun_update_ui('set_to_resume')
-            pass
+                fun_update_ui('set_to_resume')      
         
+        #end loading
         elif param.param3['meeting_status'] == 'END_LOADING':
             if param.timeout['END_LOADING'] == 0:
                 error.error_handler('ERROR_CODE_END_MEETING_TIMEOUT')# timeout, report error
@@ -319,7 +344,8 @@ def thread_state_machine():
                 param.param3['meeting_status'] = 'END'
                 fun_update_ui('set_to_end')
                 ##<--
-            elif param.msg_list_1[0] == 'meeting_end':#recv msg from tx2
+            elif param.tx2_ack['MEETING_IS_END'] == True:#recv msg from tx2
+                param.tx2_ack['MEETING_IS_END'] = False
                 param.param3['meeting_status'] = 'END'
                 fun_update_ui('set_to_end')
                 
@@ -504,6 +530,7 @@ _thread.start_new_thread(thread_update_timeout, ())
 
 
 fun_update_ui('set_to_ready')
+
 
 
 root.mainloop()

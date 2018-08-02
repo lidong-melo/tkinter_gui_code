@@ -25,6 +25,7 @@ error_code_list = {
 
 def error_handler(error_code):
     error['error_code'] = error_code
+    print(error_code)
     
     
     

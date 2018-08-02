@@ -1,7 +1,6 @@
 import platform
 
 if(platform.system() == "Linux"):
-    server = {'IP':'10.0.5.1', 'PORT':9999}
     pic_dir = 'icons/'
 else:
     pic_dir = 'C:/Users/Lidong/Dropbox (Melo)/Dropbox/Melo/GitHub/raspi_python_code/Design Resources/icons/'
@@ -16,9 +15,11 @@ ui_flag = {'loading_flag':False}
 
 msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
-msg_list_1 = ['SYSTEM_NOT_READY']
+#msg_list_1 = ['ERROR CODE is 33','SYSTEM IS READY', 'MEETING IS START', 'TX2 END MEETING', 'MEETING IS END']
 
-timeout = {'bootup_greeting_timeout':2, 'meeting_ready_timeout': 0}
+tx2_ack = {'SYSTEM_IS_READY':False, 'MEETING_IS_STARTED':False, 'MEETING_IS_PAUSED':False, 'MEETING_IS_RESUME':False, 'TX2_END_MEETING':False, 'MEETING_IS_END':False, 'ERROR_CODE':0}
+
+timeout = {'bootup_greeting_timeout':-1, 'meeting_ready_timeout': -1, 'START_LOADING': -1, 'END_LOADING': -1}
 
 quit_msg = {'quit_flag':False, 'quit_code': 0, 'quit_timeout': 0, 'quit_cmd':False}
 
