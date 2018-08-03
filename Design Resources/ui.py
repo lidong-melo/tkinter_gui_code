@@ -223,7 +223,7 @@ def thread_state_machine():
             param.tx2_ack['ERROR_CODE'] = 0
             error.error_handler('ERROR_CODE_TX2_ERROR')
         
-        #button
+        #vol button
         if param.button_click['volume_down'] == True:#vol- button click
             param.button_click['volume_down'] = False
             fun_update_ui('set_to_vol_down')

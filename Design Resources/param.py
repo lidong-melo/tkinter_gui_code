@@ -1,9 +1,12 @@
 import platform
+import sys
 
 if(platform.system() == "Linux"):
     pic_dir = 'icons/'
 else:
-    pic_dir = 'C:/Users/Lidong/Dropbox (Melo)/Dropbox/Melo/GitHub/raspi_python_code/Design Resources/icons/'
+    pic_dir = str(sys.path[0] + "\\icons\\")
+    print(pic_dir)
+    #pic_dir = 'C:/Users/Lidong/Dropbox (Melo)/Dropbox/Melo/GitHub/raspi_python_code/Design Resources/icons/'
 
     
     
@@ -17,7 +20,26 @@ msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
 #msg_list_1 = ['ERROR CODE is 33','SYSTEM IS READY', 'MEETING IS START', 'TX2 END MEETING', 'MEETING IS END']
 
-tx2_ack = {'SYSTEM_IS_READY':False, 'MEETING_IS_STARTED':False, 'MEETING_IS_PAUSED':False, 'MEETING_IS_RESUME':False, 'TX2_END_MEETING':False, 'MEETING_IS_END':False, 'ERROR_CODE':0}
+
+tx2_ack = {
+'SYSTEM_IS_READY':False,
+'MEETING_IS_STARTED':False,
+'MEETING_IS_PAUSED':False,
+'MEETING_IS_RESUME':False,
+'TX2_END_MEETING':False,
+'MEETING_IS_END':False,
+'ERROR_CODE':0
+}
+
+
+raspi_ack = {
+'MEETING_IS_STARTING':False,
+'MEETING_IS_ENDING':False,
+'MEETING_IS_PAUSING':False,
+'MEETING_IS_RESUMING':False,
+'ERROR_CODE':0
+}
+
 
 timeout = {'bootup_greeting_timeout':-1, 'meeting_ready_timeout': -1, 'START_LOADING': -1, 'END_LOADING': -1}
 
@@ -25,6 +47,8 @@ quit_msg = {'quit_flag':False, 'quit_code': 0, 'quit_timeout': 0, 'quit_cmd':Fal
 
 
 button_click = {'start_meeting':False, 'end_meeting':False, 'mute':False, 'unmute':False, 'pause':False, 'resume':False, 'volume_up':False, 'volume_down':False}
+
+
 
 pic_path = {
 'bootup_greeting': pic_dir+'bootup_greeting.png',

@@ -7,7 +7,7 @@ import platform
 if(platform.system() == "Linux"):
     server = {'IP':'10.0.5.1', 'PORT':9999}
 else:
-    server = {'IP':'192.168.31.209', 'PORT':60000}
+    server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
     
 recv_msg_list = {}
 
@@ -25,7 +25,9 @@ def thread_udp_recv():
         try:
             recv_data = my_udp_socket.recv(1024)
             recv_str = recv_data.decode()
+            print('str:',recv_str)
             recv_msg_dict = json.loads(recv_str)
+            print('dict:',recv_msg_dict)
             parse_udp_msg(recv_msg_dict)
             recv_msg_dict.clear()
             
@@ -44,8 +46,10 @@ def thread_udp_recv():
 
 def parse_udp_msg(msg):
     # 应该按照状态机来解析msg，而不是盲目接收后修改标志
+    print('parse -->')
     param.tx2_ack.update(msg)
     print(param.tx2_ack)
+    print('<-- parse')
     pass
     
     
