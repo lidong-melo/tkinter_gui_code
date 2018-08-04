@@ -21,24 +21,41 @@ msg = {'msg_type':'r2t','status':False, 'volumn':0}
 #msg_list_1 = ['ERROR CODE is 33','SYSTEM IS READY', 'MEETING IS START', 'TX2 END MEETING', 'MEETING IS END']
 
 
-tx2_ack = {
+
+
+
+msg_to_tx2 = {
+'MEETING_IS_STARTING':False,
+'MEETING_IS_ENDING':False,
+'MEETING_IS_PAUSING':False,
+'MEETING_IS_RESUMING':False,
+'ERROR_CODE':0,
+'VOLUME_IS_UP':0,
+'VOLUME_IS_DOWN':0
+}
+
+msg_from_tx2 = {
 'SYSTEM_IS_READY':False,
 'MEETING_IS_STARTED':False,
 'MEETING_IS_PAUSED':False,
 'MEETING_IS_RESUME':False,
 'TX2_END_MEETING':False,
 'MEETING_IS_END':False,
-'ERROR_CODE':0
+'ERROR_CODE':0,
+'VOLUME_IS_UP':0,
+'VOLUME_IS_DOWN':0
 }
 
-
-raspi_ack = {
-'MEETING_IS_STARTING':False,
-'MEETING_IS_ENDING':False,
-'MEETING_IS_PAUSING':False,
-'MEETING_IS_RESUMING':False,
-'ERROR_CODE':0
+#根据不同状态机，响应不同消息
+msg_list_for_state_machine={
+'READY':['SYSTEM_IS_READY','ERROR_CODE'],
+'IDLE':['ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
+'START_LOADING':['MEETING_IS_STARTED','ERROR_CODE'],
+'STARTED':['TX2_END_MEETING','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
+'PAUSED':['MEETING_IS_PAUSED','TX2_END_MEETING','MEETING_IS_END','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
+'END_LOADING':['MEETING_IS_END','ERROR_CODE']
 }
+
 
 
 timeout = {'bootup_greeting_timeout':-1, 'meeting_ready_timeout': -1, 'START_LOADING': -1, 'END_LOADING': -1}

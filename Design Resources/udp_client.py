@@ -4,16 +4,15 @@ import param
 import json
 import platform
 
-if(platform.system() == "Linux"):
-    server = {'IP':'10.0.5.1', 'PORT':9999}
-else:
-    server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
-    
-recv_msg_list = {}
+
 
 # def fun_send_msg(udp_msg):
    # my_udp_socket.sendall(udp_msg.encode())
-   
+
+
+
+
+
    
 def send_msg(udp_msg):
     json_string = json.dumps(udp_msg)
@@ -45,13 +44,27 @@ def thread_udp_recv():
     my_udp_socket.close()
 
 def parse_udp_msg(msg):
-    # 应该按照状态机来解析msg，而不是盲目接收后修改标志
     print('parse -->')
-    param.tx2_ack.update(msg)
-    print(param.tx2_ack)
-    print('<-- parse')
-    pass
+    # 按照状态机接收解析消息，如果不对应则抛弃。
+    # 方法1：在字典中找列表中的值
+    # for key in param.msg_list_for_state_machine[param.param3['meeting_status']]:
+        # print('123',key)
+        # if msg.get(key):
+            # param.msg_from_tx2[key] = msg[key]
     
+    # 方法2：在列表中找字典中的key
+    for key in msg:
+        if param.msg_list_for_state_machine[param.param3['meeting_status']].count(key) != 0:
+            param.msg_from_tx2[key] = msg[key]
+    print('<-- parse')
+    
+
+if(platform.system() == "Linux"):
+    server = {'IP':'10.0.5.1', 'PORT':9999}
+else:
+    server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
+    
+
     
 ## create UDP socket
 my_udp_socket = socket(AF_INET,SOCK_DGRAM)
