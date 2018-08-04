@@ -18,14 +18,11 @@ param = {'thread_quit': False}
 param2 = {'msg_type':'t2r', 'doa_angle':True} 
 
 def button_click(button_idx):
-    json_string = json.dumps(list(list_button[button_idx].values())[0])
-    json_string = json_string.replace('\\"' , '@')
-    json_string = json_string.replace('\"' , '')
-    json_string = json_string.replace('@' , '\"')
+    json_string = json.dumps(list_button[button_idx])
     address_tuple = tuple(address_list)
     try:
-        s.sendto(json_string.replace('\\' , '').encode(), address_tuple)
-        print('send', address_tuple, json_string.replace('\\' , ''))
+        s.sendto(json_string.encode(), address_tuple)
+        print('send', address_tuple, json_string)
     except:
         print('disconnect')
 
@@ -79,10 +76,10 @@ _thread.start_new_thread(thread_udp_recv, ())
     
 
 list_button = [
-{'button_system_is_ready':'{"SYSTEM_IS_READY": true}'},
-{'button_meeting_is_started':'{"MEETING_IS_STARTED": true}'},
-{'button_tx2_end_meeting':'{"TX2_END_MEETING":true}'},
-{'button_meeting_is_end':'{"MEETING_IS_END":true}'}
+{"SYSTEM_IS_READY": True},
+{"MEETING_IS_STARTED": True},
+{"TX2_END_MEETING":True},
+{"MEETING_IS_END":True}
 ]
 
 
