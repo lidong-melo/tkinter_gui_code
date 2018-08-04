@@ -68,7 +68,7 @@ def fun_update_ui(flag):
         show_widget_list(list_start_loading)
         param.ui_flag['loading_flag'] = True
         
-    elif flag == 'set_to_started':
+    elif flag == 'set_to_recording':
         fun_update_label_time()
         change_all_widgets_bg('#000000')
         show_widget_list(list_meeting_start_show)
@@ -91,7 +91,9 @@ def fun_update_ui(flag):
         label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
         photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
         photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
-        param.param1['volume_adjust_timeout'] = 2
+        #param.param1['volume_adjust_timeout'] = 2
+        
+        set_timer_task(2, True, True)
         if param.param1['volume'] < 9:
             param.param1['volume'] += 1
             photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
@@ -102,7 +104,8 @@ def fun_update_ui(flag):
         label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
         photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
         photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
-        param.param1['volume_adjust_timeout'] = 2
+        #param.param1['volume_adjust_timeout'] = 2
+        set_timer_task(2, True, True)
         if param.param1['volume'] > 0 :
             param.param1['volume'] -= 1
             photo_path = param.pic_path['volume_'] + str(param.param1['volume']) + '.png'
@@ -140,17 +143,28 @@ def hide_widget_list(widget_list):
     for widget in widget_list:
         widget.place_forget()
 
+# def fun_change_volume_icon():
+    # if param.param1['volume_adjust_timeout'] > 0:
+        # param.param1['volume_adjust_timeout'] -= 1
+        # if param.param1['volume_adjust_timeout'] == 0:
+            # try:
+                # #volume_adjust_hide
+                # label_volume.place_forget()
+                # photoimage_button_volume_down.config(file = param.param1['volume_down_inactive'])
+                # photoimage_button_volume_up.config(file = param.param1['volume_up_inactive'])    
+            # except:
+                # pass
+
 def fun_change_volume_icon():
-    if param.param1['volume_adjust_timeout'] > 0:
-        param.param1['volume_adjust_timeout'] -= 1
-        if param.param1['volume_adjust_timeout'] == 0:
-            try:
-                #volume_adjust_hide
-                label_volume.place_forget()
-                photoimage_button_volume_down.config(file = param.param1['volume_down_inactive'])
-                photoimage_button_volume_up.config(file = param.param1['volume_up_inactive'])    
-            except:
-                pass
+    print('callback')
+    try:
+        #volume_adjust_hide
+        label_volume.place_forget()
+        photoimage_button_volume_down.config(file = param.param1['volume_down_inactive'])
+        photoimage_button_volume_up.config(file = param.param1['volume_up_inactive'])    
+    except:
+        pass
+
                 
 def fun_thread_quit_check():
     # if ui quit, tell other threads to quit
@@ -163,9 +177,10 @@ def fun_thread_quit_check():
                 
 def fun_update_label_time():
     ## label time
+    print('update_label')
     if param.param3['meeting_status'] == 'PAUSED':
         param.param3['pause_time'] += 1#这个方案可能会导致多减1秒，待后续单独开启线程任务可以解决
-    if param.param3['meeting_status'] == 'STARTED':
+    if param.param3['meeting_status'] == 'RECORDING':
         param.param3['new_time'] = datetime.datetime.now()
         time_delta = param.param3['new_time'] - param.param3['old_time'] 
         m, s = divmod(time_delta.seconds - param.param3['pause_time'], 60)
@@ -177,17 +192,47 @@ def fun_update_label_time():
             pass          
 
     
-            
+list_timer_task = [
+{'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':'RASPI_IS_READY'},
+{'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},
+{'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},
+{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check}
 
-def thread_update_ui():
+]
+
+#只开启任务
+def set_timer_task(task_id, enable, reset):
+    list_timer_task[task_id]['enable'] = enable
+    if reset == True:# 重置时间
+        list_timer_task[task_id]['countdown'] = list_timer_task[task_id]['interval']
+
+
+
+def thread_timer_task():
     while param.quit_msg['quit_flag'] == False :
-        time.sleep(1)# 1 second timer
-        fun_thread_quit_check()
-        fun_change_volume_icon()
-        fun_update_label_time()
+        time.sleep(1)
+        for task in list_timer_task:
+            if task['enable'] == True:
+                if task['countdown'] > 0 :
+                    task['countdown'] -= 1
+                    if task['countdown'] == 0:
+                        task['countdown'] = task['interval']
+                        if 'arg' in task.keys():
+                            task['callback'](task['arg'])
+                        else:
+                            task['callback']()
+                        
+                    
+
+# def thread_update_ui():
+    # while param.quit_msg['quit_flag'] == False :
+        # time.sleep(1)# 1 second timer
+        # fun_thread_quit_check()
+        #fun_change_volume_icon()
+        #fun_update_label_time()
         # in mode ready: every second send ready to tx2
-        if param.param3['meeting_status'] == 'READY':
-            udp_client.send_msg('RASPI_IS_READY')
+        # if param.param3['meeting_status'] == 'READY':
+            # udp_client.send_msg('RASPI_IS_READY')
 
 
 
@@ -219,8 +264,8 @@ def thread_state_machine():
     while param.quit_msg['quit_flag'] == False:
         time.sleep(0.02)
         
-        if param.tx2_ack['ERROR_CODE'] != 0:# tx2 报错
-            param.tx2_ack['ERROR_CODE'] = 0
+        if param.msg_from_tx2['ERROR_CODE'] != 0:# tx2 报错
+            param.msg_from_tx2['ERROR_CODE'] = 0
             error.error_handler('ERROR_CODE_TX2_ERROR')
         
         #vol button
@@ -245,26 +290,32 @@ def thread_state_machine():
         
         #ready
         if param.param3['meeting_status'] == 'READY':
+            #list_timer_task[0]['enable'] = True # 开启udp_send任务
+            set_timer_task(0, True, False)
             if param.timeout['bootup_greeting_timeout'] == 0:
                 error.error_handler('ERROR_CODE_READY_TIMEOUT')# timeout, report error
                 
                 ## just for debug #调试用，后续删掉
                 param.param3['meeting_status'] = 'IDLE'
+                print(param.param3['meeting_status'])
                 fun_update_ui('set_to_idle')
 
-            elif param.tx2_ack['SYSTEM_IS_READY'] == True:#recv msg from tx2
-                param.tx2_ack['SYSTEM_IS_READY'] = False
+            elif param.msg_from_tx2['SYSTEM_IS_READY'] == True:#recv msg from tx2
+                param.msg_from_tx2['SYSTEM_IS_READY'] = False
                 param.param3['meeting_status'] = 'IDLE'
+                print(param.param3['meeting_status'])
                 fun_update_ui('set_to_idle')
 
                 
         #idle
         elif param.param3['meeting_status'] == 'IDLE':
             # 按键启动会议
+            set_timer_task(0, False, False)
             if param.button_click['start_meeting'] == True:#start button click
                 param.button_click['start_meeting'] = False
                 #param.timeout['START_LOADING'] = 3
                 param.param3['meeting_status'] = 'START_LOADING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_start_loading')
 
@@ -274,29 +325,32 @@ def thread_state_machine():
                 error.error_handler('ERROR_CODE_START_MEETING_TIMEOUT')# timeout, report error
                 
                 ##--> just for debug #调试用，后续删掉
-                param.param3['meeting_status'] = 'STARTED'
+                param.param3['meeting_status'] = 'RECORDING'
+                print(param.param3['meeting_status'])
                 param.param3['old_time'] = datetime.datetime.now()
                 param.param3['new_time'] = param.param3['old_time']
                 param.param3['pause_time'] = 0
                 param.param3['time_str'] = '00 : 00 : 00'
-                fun_update_ui('set_to_started')
+                fun_update_ui('set_to_recording')
                 ##<--
-            elif param.tx2_ack['MEETING_IS_STARTED'] == True:#recv msg from tx2
-                param.tx2_ack['MEETING_IS_STARTED'] = False
-                param.param3['meeting_status'] = 'STARTED'
-                fun_update_ui('set_to_started')
+            elif param.msg_from_tx2['MEETING_IS_RECORDING'] == True:#recv msg from tx2
+                param.msg_from_tx2['MEETING_IS_RECORDING'] = False
+                param.param3['meeting_status'] = 'RECORDING'
+                print(param.param3['meeting_status'])
+                fun_update_ui('set_to_recording')
                 ## initial time
                 param.param3['old_time'] = datetime.datetime.now()
                 param.param3['new_time'] = param.param3['old_time']
                 param.param3['pause_time'] = 0
                 param.param3['time_str'] = '00 : 00 : 00'
 
-        #started        
-        elif param.param3['meeting_status'] == 'STARTED':
-            if param.tx2_ack['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
-                param.tx2_ack['TX2_END_MEETING'] = False
+        #recording        
+        elif param.param3['meeting_status'] == 'RECORDING':
+            if param.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                param.msg_from_tx2['TX2_END_MEETING'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
                 
@@ -304,6 +358,7 @@ def thread_state_machine():
                 param.button_click['end_meeting'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
             
@@ -311,14 +366,16 @@ def thread_state_machine():
                 param.button_click['pause'] = False
                 udp_client.send_msg(param.msg)
                 param.param3['meeting_status'] = 'PAUSED'
+                print(param.param3['meeting_status'])
                 fun_update_ui('set_to_pause')
             
         #paused
         elif param.param3['meeting_status'] == 'PAUSED':
-            if param.tx2_ack['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
-                param.tx2_ack['TX2_END_MEETING'] = False
+            if param.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                param.msg_from_tx2['TX2_END_MEETING'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
                 
@@ -326,12 +383,14 @@ def thread_state_machine():
                 param.button_click['end_meeting'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.param3['meeting_status'] = 'END_LOADING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_end_loading')
 
             if param.button_click['resume'] == True:#resume button click
                 param.button_click['resume'] = False
-                param.param3['meeting_status'] = 'STARTED'
+                param.param3['meeting_status'] = 'RECORDING'
+                print(param.param3['meeting_status'])
                 udp_client.send_msg(param.msg)
                 fun_update_ui('set_to_resume')      
         
@@ -342,15 +401,18 @@ def thread_state_machine():
                 
                 ##--> just for debug #调试用，后续删掉
                 param.param3['meeting_status'] = 'END'
+                print(param.param3['meeting_status'])
                 fun_update_ui('set_to_end')
                 ##<--
-            elif param.tx2_ack['MEETING_IS_END'] == True:#recv msg from tx2
-                param.tx2_ack['MEETING_IS_END'] = False
+            elif param.msg_from_tx2['MEETING_IS_END'] == True:#recv msg from tx2
+                param.msg_from_tx2['MEETING_IS_END'] = False
                 param.param3['meeting_status'] = 'END'
+                print(param.param3['meeting_status'])
                 fun_update_ui('set_to_end')
                 
         elif param.param3['meeting_status'] == 'END':
             param.param3['meeting_status'] = 'IDLE'
+            print(param.param3['meeting_status'])
             fun_update_ui('set_to_idle')
             # 清空之前的按键事件缓存
             for key, value in param.button_click.items():
@@ -503,7 +565,7 @@ param.param3['new_time'] = param.param3['old_time']
 
 
 # get thread update ui
-_thread.start_new_thread(thread_update_ui, ())
+#_thread.start_new_thread(thread_update_ui, ())
 
 
 _thread.start_new_thread(shake_hand.thread_run, ())
@@ -527,6 +589,11 @@ _thread.start_new_thread(fun_rotate_pic, ())
 _thread.start_new_thread(thread_state_machine, ())
 
 _thread.start_new_thread(thread_update_timeout, ())
+
+_thread.start_new_thread(thread_timer_task, ())
+
+set_timer_task(1, True, True)
+set_timer_task(3, True, True)
 
 
 fun_update_ui('set_to_ready')
