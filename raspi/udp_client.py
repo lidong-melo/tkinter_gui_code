@@ -17,6 +17,7 @@ import platform
 def send_msg(udp_msg):
     json_string = json.dumps(udp_msg)
     my_udp_socket.sendall(json_string.encode())
+    #print('send_msg->', udp_msg)
 
    
 def thread_udp_recv():
@@ -40,7 +41,8 @@ def thread_udp_recv():
             # else:
                 # print('wrong param.param1')
         except:
-            print('udp parse fail')
+            pass
+            #print('udp parse fail')
     my_udp_socket.close()
 
 def parse_udp_msg(msg):

@@ -9,6 +9,7 @@ import json
 import time
 import _thread
 import platform
+import param_host
 
 
 HOST = '192.168.31.209'  
@@ -18,6 +19,8 @@ param = {'thread_quit': False}
 param2 = {'msg_type':'t2r', 'doa_angle':True} 
 
 timeout = {'no_face_15min': -1}
+
+status = {'meeting_status':'READY'}
 
 
 def thread_update_timeout():
@@ -29,7 +32,7 @@ def thread_update_timeout():
         pass
         
 def button_click(button_idx):
-    tx2_udp_send(msg_list[button_idx])
+    tx2_udp_send(param_host.msg_to_raspi[button_idx])
 
         
  
@@ -55,22 +58,23 @@ def tx2_udp_send(msg_dict):
 
         
 def thread_udp_recv():
-    while param['quit_flag'] == False:
+    while param['thread_quit'] == False:
         try:
-            recv_data,address_recv = s.recv(1024)
+            recv_data,address_recv = s.recvfrom(1024)
+            
             # update client ip -->
             address_list.clear()
             address_list_temp = list(address_recv)
             address_list.append(address_list_temp[0])
             address_list.append(address_list_temp[1])
-            print('recv',address_list)
+            print('recv',address_list,recv_data)
             # <-- update client ip
             
             # parse recv msg
             recv_str = recv_data.decode()
-            print('str:',recv_str)
+            ##print('str:',recv_str)
             recv_msg_dict = json.loads(recv_str)
-            print('dict:',recv_msg_dict)
+            ##print('dict:',recv_msg_dict)
             parse_udp_msg(recv_msg_dict)
             recv_msg_dict.clear()
         except:
@@ -79,19 +83,22 @@ def thread_udp_recv():
 
     
 def parse_udp_msg(msg):
-    print('parse -->')
+    ##print('parse -->')
     # 按照状态机接收解析消息，如果不对应则抛弃。
     # 方法1：在字典中找列表中的值
-    # for key in param.msg_list_for_state_machine[param.param3['meeting_status']]:
+    # for key in msg_list_for_state_machine[status['meeting_status']]:
         # print('123',key)
         # if msg.get(key):
-            # param.msg_from_tx2[key] = msg[key]
+            # msg_from_tx2[key] = msg[key]
     
     # 方法2：在列表中找字典中的key
     for key in msg:
-        if msg_list_for_state_machine[param.param3['meeting_status']].count(key) != 0:
-            msg_from_tx2[key] = msg[key]
-    print('<-- parse')
+        print('state=', state['tx2_state'])
+        if param_host.msg_list_for_state_machine[state['tx2_state']].count(key) != 0:
+            param_host.msg_from_raspi[key] = msg[key]
+            
+            
+    ##print('<-- parse')
     
     
 # def thread_udp_recv():
@@ -109,14 +116,18 @@ def parse_udp_msg(msg):
             # pass
 
 # UI init
-msg_list = [
+msg_to_raspi = [
 {"SYSTEM_IS_READY": True},
 {"MEETING_IS_RECORDING": True},
+{'MEETING_IS_PAUSED':True},
 {"TX2_END_MEETING":True},
-{"MEETING_IS_END":True}
+{"MEETING_IS_END":True},
+{'ERROR_CODE':0},
+{'VOLUME_IS_UP':0}, 
+{'VOLUME_IS_DOWN':0}
 ]
     
-#udp init
+#udp inits
 if(platform.system() == "Linux"):
     server = {'IP':'10.0.5.1', 'PORT':9999}
 else:
@@ -133,7 +144,8 @@ _thread.start_new_thread(thread_udp_recv, ())
 
 # Timer task
 list_timer_task = [
-{'name':'tx2_udp_send', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':msg_list[0]},
+{'name':'tx2_udp_send_1', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[0]},
+{'name':'tx2_udp_send_2', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[3]},
 # {'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},
 # {'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},
 # {'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check}
@@ -156,44 +168,74 @@ def thread_timer_task():
                         task['countdown'] = task['interval']
                         if 'arg' in task.keys():
                             task['callback'](task['arg'])
-                            print('task_arg_run')
+                            #print('task_arg_run')
                         else:
                             task['callback']()
-                            print('task_noarg_run')
+                            #print('task_noarg_run')
 
 #state machine
+#mute 和 vol+- 还未实现
+
+state = {'tx2_state':'READY'}
+
 def thread_tx2_state_machine():
-    pass
     while param['thread_quit'] != True:
         time.sleep(0.02)
-        if tx2_state == 'READY' :
-            set_timer_task(0, True, False)
-            pass
-        elif tx2_state == 'IDLE' :
-            set_timer_task(0, False, False)
-            pass
-        elif tx2_state == 'RECORDING' :
-            pass
-        elif tx2_state == 'PAUSED' :
-            pass
-        elif tx2_state == 'END' :
-            pass
+        if state['tx2_state'] == 'READY' :
+            
+            if param_host.msg_from_raspi['RASPI_IS_READY'] == True:
+                print('wait READY')
+                param_host.msg_from_raspi['RASPI_IS_READY'] = False
+                state['tx2_state'] = 'IDLE'
+                set_timer_task(0, True, False)
+                print('sent msg')
+        elif state['tx2_state'] == 'IDLE' :
+            if param_host.msg_from_raspi['MEETING_IS_STARTING'] == True:
+                print('meeting is starting')
+                param_host.msg_from_raspi['MEETING_IS_STARTING'] = False
+                state['tx2_state'] = 'RECORDING'
+                tx2_udp_send(param_host.msg_to_raspi[1])
+        elif state['tx2_state'] == 'RECORDING' :
+            if param_host.param1['no_face_15min'] == True:
+                set_timer_task(1, True, False)
+                #tx2_udp_send(param_host.msg_to_raspi[4])  
+            if param_host.msg_from_raspi['MEETING_IS_ENDING'] == True:
+                param_host.msg_from_raspi['MEETING_IS_ENDING'] = False            
+                state['tx2_state'] = 'END'               
+            if param_host.msg_from_raspi['MEETING_IS_PAUSING'] == True:
+                param_host.msg_from_raspi['MEETING_IS_PAUSING'] = False            
+                state['tx2_state'] = 'PAUSED'
+                tx2_udp_send(param_host.msg_to_raspi[2])
+        elif state['tx2_state'] == 'PAUSED' :
+            if param_host.msg_from_raspi['MEETING_IS_ENDING'] == True:
+                param_host.msg_from_raspi['MEETING_IS_ENDING'] = False            
+                state['tx2_state'] = 'END'
+                
+            elif param_host.msg_from_raspi['MEETING_IS_RESUMING'] == True:
+                param_host.msg_from_raspi['MEETING_IS_RESUMING'] = False            
+                state['tx2_state'] = 'RECORDING'
+                tx2_udp_send(param_host.msg_to_raspi[1])
+        elif state['tx2_state'] == 'END' :#结束会议
+            set_timer_task(1, False, False)
+            tx2_udp_send(param_host.msg_to_raspi[4])
+            state['tx2_state'] = 'IDLE'
     # 退出状态机，重置环境, 记录error log
     
     
-tx2_state = 'READY'
+
+# init thread
 _thread.start_new_thread(thread_tx2_state_machine, ())  
 _thread.start_new_thread(thread_timer_task, ())  
 
 
 
-
+#init UI
 root = tk.Tk()
 root.config(width = 800, height = 600)
 
 buttons = []
-for i in range(len(msg_list)):
-    buttons.append(Button(root, text=list(msg_list[i].keys())[0], command=lambda x=i: button_click(x)))
+for i in range(len(param_host.msg_to_raspi)):
+    buttons.append(Button(root, text=list(param_host.msg_to_raspi[i].keys())[0], command=lambda x=i: button_click(x)))
     buttons[i].place(x=50,y=50*i+100)
 
 

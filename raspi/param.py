@@ -24,15 +24,18 @@ msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
 
 
-msg_to_tx2 = {
-'MEETING_IS_STARTING':False,
-'MEETING_IS_ENDING':False,
-'MEETING_IS_PAUSING':False,
-'MEETING_IS_RESUMING':False,
-'ERROR_CODE':0,
-'VOLUME_IS_UP':0,
-'VOLUME_IS_DOWN':0
-}
+msg_to_tx2 = [
+{'RASPI_IS_READY':True}, #0
+{'MEETING_IS_STARTING':True}, #1
+{'MEETING_IS_ENDING':True}, #2
+{'MEETING_IS_PAUSING':True}, #3
+{'MEETING_IS_RESUMING':True}, #4
+{'ERROR_CODE':0}, #5
+{'VOLUME_IS_UP':0}, #6
+{'VOLUME_IS_DOWN':0}, #7
+{'MUTE':True}, #8
+{'UNMUTE':True} #9
+]
 
 msg_from_tx2 = {
 'SYSTEM_IS_READY':False,
@@ -55,7 +58,6 @@ msg_list_for_state_machine={
 'PAUSED':['MEETING_IS_PAUSED','TX2_END_MEETING','MEETING_IS_END','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
 'END_LOADING':['MEETING_IS_END','ERROR_CODE']
 }
-
 
 
 timeout = {'bootup_greeting_timeout':-1, 'meeting_ready_timeout': -1, 'START_LOADING': -1, 'END_LOADING': -1}
