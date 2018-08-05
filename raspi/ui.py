@@ -156,7 +156,7 @@ def hide_widget_list(widget_list):
                 # pass
 
 def fun_change_volume_icon():
-    print('callback')
+    print('change_volume')
     try:
         #volume_adjust_hide
         label_volume.place_forget()
@@ -164,6 +164,7 @@ def fun_change_volume_icon():
         photoimage_button_volume_up.config(file = param.param1['volume_up_inactive'])    
     except:
         pass
+        list_timer_task[2]['enable'] = False
 
                 
 def fun_thread_quit_check():
@@ -191,7 +192,7 @@ def fun_update_label_time():
         except:
             pass          
 
-    
+# Timer task   
 list_timer_task = [
 {'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':'RASPI_IS_READY'},
 {'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},
@@ -200,7 +201,7 @@ list_timer_task = [
 
 ]
 
-#只开启任务
+
 def set_timer_task(task_id, enable, reset):
     list_timer_task[task_id]['enable'] = enable
     if reset == True:# 重置时间

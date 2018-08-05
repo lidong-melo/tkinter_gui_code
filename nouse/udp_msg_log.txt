@@ -5,7 +5,7 @@
 
 {"SYSTEM_IS_READY":true}
 
-{"MEETING_IS_STARTED":true}
+{"MEETING_IS_RECORDING":true}
 
 {"TX2_END_MEETING":true}
 

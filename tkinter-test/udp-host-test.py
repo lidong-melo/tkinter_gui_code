@@ -8,11 +8,19 @@ import json
 import random
 import time
 import _thread
-  
+import platform
+
+if(platform.system() == "Linux"):
+    server = {'IP':'10.0.5.1', 'PORT':9999}
+else:
+    server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
+    print(server)
+
+	
 HOST = '192.168.31.209'  
 PORT = 60000
-address_list = ['192.168.31.209', 10000]
-param2 = {'msg_type':'t2r', 'doa_angle':0} 
+address_list = ['192.168.2.207', 10000]
+param2 = {'msg_type':'t2r', 'doa_angle':True} 
 
 
 def thread_udp_recv():
@@ -32,7 +40,7 @@ def thread_udp_recv():
 
 
 s = socket(AF_INET,SOCK_DGRAM)  
-s.bind((HOST,PORT))
+s.bind((server['IP'], server['PORT']))
 _thread.start_new_thread(thread_udp_recv, ())
 
 
