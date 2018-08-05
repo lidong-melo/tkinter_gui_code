@@ -1,4 +1,5 @@
 
+
 msg_from_raspi = {
 'RASPI_IS_READY':False, #0
 'MEETING_IS_STARTING':False, #1
@@ -8,7 +9,10 @@ msg_from_raspi = {
 'ERROR_CODE':0, #5
 'VOLUME_IS_UP':0, #6
 'VOLUME_IS_DOWN':0, #7
-'RASPI_IS_IDLE':False #8
+'MUTE':False, #8
+'UNMUTE':False, #9
+'RASPI_IS_IDLE':False, #10
+
 }
 
 # msg_to_raspi = {
@@ -22,14 +26,14 @@ msg_from_raspi = {
 # 'VOLUME_IS_DOWN':0 #7
 # }
 msg_to_raspi = [
-{"SYSTEM_IS_READY": True},
-{"MEETING_IS_RECORDING": True},
-{'MEETING_IS_PAUSED':True},
-{"TX2_END_MEETING":True},
-{"MEETING_IS_END":True},
-{'ERROR_CODE':0},
-{'VOLUME_IS_UP':0}, 
-{'VOLUME_IS_DOWN':0}
+{"SYSTEM_IS_READY": True}, #0
+{"MEETING_IS_RECORDING": True}, #1
+{'MEETING_IS_PAUSED':True}, #2
+{"TX2_END_MEETING":True}, #3
+{"MEETING_IS_END":True}, #4
+{'ERROR_CODE':0}, #5
+{'VOLUME_IS_UP':0}, #6
+{'VOLUME_IS_DOWN':0}, #7
 ]
 
 param1 = {'no_face_15min':False}

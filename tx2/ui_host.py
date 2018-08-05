@@ -20,7 +20,7 @@ param2 = {'msg_type':'t2r', 'doa_angle':True}
 
 timeout = {'no_face_15min': -1}
 
-status = {'meeting_status':'READY'}
+state = {'tx2_state':'READY'}
 
 
 def thread_update_timeout():
@@ -39,8 +39,6 @@ def button_click(button_idx):
     
 def fun_thread_quit_check():
 # if ui quit, tell other threads to quit
-    while param['thread_quit'] == False:
-        time.sleep(0.1)
         try:
             root.cget('bg')
         except:
@@ -137,18 +135,17 @@ else:
 #udp init
 s = socket(AF_INET,SOCK_DGRAM)  
 s.bind((server['IP'], server['PORT']))
-_thread.start_new_thread(fun_thread_quit_check, ())
+#_thread.start_new_thread(fun_thread_quit_check, ())
 _thread.start_new_thread(thread_udp_recv, ())
 
 
 
 # Timer task
 list_timer_task = [
-{'name':'tx2_udp_send_1', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[0]},
-{'name':'tx2_udp_send_2', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[3]},
-# {'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},
-# {'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},
-# {'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check}
+{'name':'send_msg_system_ready', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[0]},
+{'name':'send_msg_end_meeting', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_udp_send, 'arg':param_host.msg_to_raspi[3]},
+{'name':'send_msg_tx2_status', 'enable':False, 'interval':3, 'countdown':3, 'callback':tx2_udp_send, 'arg':state},
+{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check}
 
 ]
 
@@ -176,19 +173,17 @@ def thread_timer_task():
 #state machine
 #mute 和 vol+- 还未实现
 
-state = {'tx2_state':'READY'}
 
 def thread_tx2_state_machine():
     while param['thread_quit'] != True:
         time.sleep(0.02)
         if state['tx2_state'] == 'READY' :
-            
             if param_host.msg_from_raspi['RASPI_IS_READY'] == True:
-                print('wait READY')
                 param_host.msg_from_raspi['RASPI_IS_READY'] = False
                 state['tx2_state'] = 'IDLE'
-                set_timer_task(0, True, False)
-                print('sent msg')
+                #set_timer_task(0, True, False)
+                tx2_udp_send(param_host.msg_to_raspi[0])
+
         elif state['tx2_state'] == 'IDLE' :
             if param_host.msg_from_raspi['MEETING_IS_STARTING'] == True:
                 print('meeting is starting')
@@ -225,18 +220,19 @@ def thread_tx2_state_machine():
 
 # init thread
 _thread.start_new_thread(thread_tx2_state_machine, ())  
-_thread.start_new_thread(thread_timer_task, ())  
+_thread.start_new_thread(thread_timer_task, ())
 
-
+set_timer_task(2, True, True)#loop send state
+set_timer_task(3, True, True)#thread_quit_check 
 
 #init UI
 root = tk.Tk()
-root.config(width = 800, height = 600)
+root.config(width = 250, height = 300)
 
 buttons = []
 for i in range(len(param_host.msg_to_raspi)):
     buttons.append(Button(root, text=list(param_host.msg_to_raspi[i].keys())[0], command=lambda x=i: button_click(x)))
-    buttons[i].place(x=50,y=50*i+100)
+    buttons[i].place(x=30,y=30*i+30)
 
 
 

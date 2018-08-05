@@ -20,7 +20,7 @@ msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
 #msg_list_1 = ['ERROR CODE is 33','SYSTEM IS READY', 'MEETING IS START', 'TX2 END MEETING', 'MEETING IS END']
 
-
+state = {'raspi_state':'READY'}
 
 
 
@@ -34,7 +34,8 @@ msg_to_tx2 = [
 {'VOLUME_IS_UP':0}, #6
 {'VOLUME_IS_DOWN':0}, #7
 {'MUTE':True}, #8
-{'UNMUTE':True} #9
+{'UNMUTE':True}, #9
+
 ]
 
 msg_from_tx2 = {
