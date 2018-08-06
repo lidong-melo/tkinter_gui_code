@@ -10,6 +10,7 @@ import time
 import _thread
 import platform
 import param_host
+import wifi
 
 
 HOST = '192.168.31.209'  
@@ -91,7 +92,7 @@ def parse_udp_msg(msg):
     
     # 方法2：在列表中找字典中的key
     for key in msg:
-        print('state=', state['tx2_state'])
+        print(state)
         if param_host.msg_list_for_state_machine[state['tx2_state']].count(key) != 0:
             param_host.msg_from_raspi[key] = msg[key]
             
@@ -215,12 +216,27 @@ def thread_tx2_state_machine():
             tx2_udp_send(param_host.msg_to_raspi[4])
             state['tx2_state'] = 'IDLE'
     # 退出状态机，重置环境, 记录error log
+
+
+def thread_get_rssi():
+    while param['thread_quit'] != True: 
+        rssi = wifi.get_rssi()
+        print(rssi)
+        if rssi.isdigit():
+            param_host.msg_to_raspi[8]['WIFI_RSSI'] = rssi
+            tx2_udp_send(param_host.msg_to_raspi[8])
+        else:
+            param_host.msg_to_raspi[5]['ERROR_CODE'] = 55
+            tx2_udp_send(param_host.msg_to_raspi[5])
+        time.sleep(3)
+    
     
     
 
 # init thread
 _thread.start_new_thread(thread_tx2_state_machine, ())  
 _thread.start_new_thread(thread_timer_task, ())
+_thread.start_new_thread(thread_get_rssi, ())
 
 set_timer_task(2, True, True)#loop send state
 set_timer_task(3, True, True)#thread_quit_check 

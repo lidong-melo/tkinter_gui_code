@@ -34,6 +34,7 @@ msg_to_raspi = [
 {'ERROR_CODE':0}, #5
 {'VOLUME_IS_UP':0}, #6
 {'VOLUME_IS_DOWN':0}, #7
+{'WIFI_RSSI':0} #8
 ]
 
 param1 = {'no_face_15min':False}

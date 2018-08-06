@@ -1,6 +1,5 @@
 import subprocess
 import re
-import time
 
 #proc = subprocess.Popen(["iwlist", interface, "scan"],stdout=subprocess.PIPE, universal_newlines=True)
 #sudo iw dev wlan0 scan | grep -E 'on wlan0|signal:|SSID:' > ~/lidong/rssi.txt
@@ -15,18 +14,11 @@ def get_rssi():
     out_line = out[index2:index3]
     if out_line:
         ret = re.search('\d+', out[index2:index3]).group()
-        print(ret)
+        #print(ret)
         return ret
     else:
-        print('no connection')
-        return 'error_code = 55'
-        
-        
-
-        
-while 1:
-    get_rssi()
-    time.sleep(3)
+        #print('no connection')
+        return 'ERROR'
     
     
     
