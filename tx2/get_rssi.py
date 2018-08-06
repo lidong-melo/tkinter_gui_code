@@ -12,10 +12,11 @@ def get_rssi():
     index1 = out.find('associated')
     index2 = out.find('signal', index1)
     index3 = out.find('\n', index2)
-    ret = re.search('\d+', out[index2:index3]).group()
-    if ret:
+    out_line = out[index2:index3]
+    if out_line:
+        ret = re.search('\d+', out[index2:index3]).group()
         print(ret)
-        return ret  
+        return ret
     else:
         print('no connection')
         return 'error_code = 55'
@@ -25,7 +26,7 @@ def get_rssi():
         
 while 1:
     get_rssi()
-    time.sleep(10)
+    time.sleep(3)
     
     
     
