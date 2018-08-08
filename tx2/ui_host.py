@@ -175,14 +175,23 @@ def thread_timer_task():
                             #print('task_noarg_run')
 
                             
+def play_sound(file_name):
+    #print('play sound2')
+    full_file_name = "/home/nvidia/lidong/"
+    #print(full_file_name)
+    full_file_name += file_name
+    #print(full_file_name)
+    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
+                            
 def start_new_meeting():
-    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+    #print('play sound')
+    play_sound("Speech On.wav")
     #proc = subprocess.Popen(["nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
     
     pass
 
 def end_meeting():
-    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+    play_sound("Speech Off.wav")
     #proc = subprocess.Popen(["killall", "nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
     pass 
 
@@ -208,19 +217,21 @@ def end_meeting():
 def thread_ui_reaction():
     while param['thread_quit'] != True:
         time.sleep(0.02)
-        if param_host.msg_from_raspi['VOLUME_IS_UP'] != param_host.param1['volume']:
-            param_host.msg_from_raspi['VOLUME_IS_UP'] = param_host.param1['volume']
+        if param_host.msg_from_raspi['VOLUME_IS_UP'] != -1:
+            param_host.param1['volume'] = param_host.msg_from_raspi['VOLUME_IS_UP']
+            param_host.msg_from_raspi['VOLUME_IS_UP'] = -1
             param_host.msg_to_raspi[6]['VOLUME_IS_UP'] = param_host.param1['volume']
-            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            play_sound("Speech On.wav")
             #out, err = proc.communicate()
             tx2_udp_send(param_host.msg_to_raspi[6])
             #print('out',out)
             #print('err',err)
 
-        if param_host.msg_from_raspi['VOLUME_IS_DOWN'] != param_host.param1['volume']:
-            param_host.msg_from_raspi['VOLUME_IS_DOWN'] = param_host.param1['volume']
+        if param_host.msg_from_raspi['VOLUME_IS_DOWN'] != -1:
+            param_host.param1['volume'] = param_host.msg_from_raspi['VOLUME_IS_DOWN']
+            param_host.msg_from_raspi['VOLUME_IS_DOWN'] = -1
             param_host.msg_to_raspi[7]['VOLUME_IS_DOWN'] = param_host.param1['volume']
-            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            play_sound("Speech Off.wav")
             #out, err = proc.communicate()
             tx2_udp_send(param_host.msg_to_raspi[7])
             #print('out',out)
@@ -228,19 +239,21 @@ def thread_ui_reaction():
 
         if param_host.msg_from_raspi['MUTE'] == True:
             param_host.msg_from_raspi['MUTE'] = False
-            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            param_host.param1['mute'] = True
+            play_sound("Speech On.wav")
             #out, err = proc.communicate()
-            param_host.msg_to_raspi[8]['MUTE'] = param_host.param1['mute']
-            tx2_udp_send(param_host.msg_to_raspi[8])
+            param_host.msg_to_raspi[9]['MUTE'] = True
+            tx2_udp_send(param_host.msg_to_raspi[9])
             #print('out',out)
             #print('err',err)
 
         if param_host.msg_from_raspi['UNMUTE'] == True:
             param_host.msg_from_raspi['UNMUTE'] = False
-            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            param_host.param1['mute'] = False
+            play_sound("Speech Off.wav")
             #out, err = proc.communicate()
-            param_host.msg_to_raspi[9]['UNMUTE'] = param_host.param1['mute']
-            tx2_udp_send(param_host.msg_to_raspi[9])
+            param_host.msg_to_raspi[10]['UNMUTE'] = True
+            tx2_udp_send(param_host.msg_to_raspi[10])
             #print('out',out)
             #print('err',err)
     
