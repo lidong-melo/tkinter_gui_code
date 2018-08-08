@@ -11,11 +11,13 @@ import _thread
 import platform
 import param_host
 import wifi
+import subprocess
 
 
-HOST = '192.168.31.209'  
-PORT = 60000
-address_list = ['192.168.2.207', 10000]
+# HOST = '192.168.31.209'
+# PORT = 60000
+#address_list = ['192.168.2.207', 10000]
+address_list = ['10.0.5.2', 10000]
 param = {'thread_quit': False}
 param2 = {'msg_type':'t2r', 'doa_angle':True} 
 
@@ -24,7 +26,7 @@ timeout = {'no_face_15min': -1}
 state = {'tx2_state':'READY'}
 
 
-def thread_update_timeout():
+def thread_update_timeout(): 
     while param['thread_quit'] == False:
         time.sleep(1)
         for key, value in timeout.items():
@@ -95,6 +97,7 @@ def parse_udp_msg(msg):
         print(state)
         if param_host.msg_list_for_state_machine[state['tx2_state']].count(key) != 0:
             param_host.msg_from_raspi[key] = msg[key]
+            #print(param_host.msg_from_raspi[key])
             
             
     ##print('<-- parse')
@@ -115,16 +118,16 @@ def parse_udp_msg(msg):
             # pass
 
 # UI init
-msg_to_raspi = [
-{"SYSTEM_IS_READY": True},
-{"MEETING_IS_RECORDING": True},
-{'MEETING_IS_PAUSED':True},
-{"TX2_END_MEETING":True},
-{"MEETING_IS_END":True},
-{'ERROR_CODE':0},
-{'VOLUME_IS_UP':0}, 
-{'VOLUME_IS_DOWN':0}
-]
+# msg_to_raspi = [
+# {"SYSTEM_IS_READY": True},
+# {"MEETING_IS_RECORDING": True},
+# {'MEETING_IS_PAUSED':True},
+# {"TX2_END_MEETING":True},
+# {"MEETING_IS_END":True},
+# {'ERROR_CODE':0},
+# {'VOLUME_IS_UP':0}, 
+# {'VOLUME_IS_DOWN':0}
+# ]
     
 #udp inits
 if(platform.system() == "Linux"):
@@ -171,10 +174,78 @@ def thread_timer_task():
                             task['callback']()
                             #print('task_noarg_run')
 
+                            
+def start_new_meeting():
+    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+    #proc = subprocess.Popen(["nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
+    
+    pass
+
+def end_meeting():
+    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+    #proc = subprocess.Popen(["killall", "nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
+    pass 
+
+#aplay -Dhw:2,0 Speech\ On.wav 
+# def volume_up():
+    # print('volume up')
+
+    # pass
+    
+# def volume_down():
+    # print('volume down')
+
+    # pass    
+
+# def mute():
+    # print('mute')
+
+
+# def unmute():
+    # print('unmute')
+
+
+def thread_ui_reaction():
+    while param['thread_quit'] != True:
+        time.sleep(0.02)
+        if param_host.msg_from_raspi['VOLUME_IS_UP'] != param_host.param1['volume']:
+            param_host.msg_from_raspi['VOLUME_IS_UP'] = param_host.param1['volume']
+            param_host.msg_to_raspi[6]['VOLUME_IS_UP'] = param_host.param1['volume']
+            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            #out, err = proc.communicate()
+            tx2_udp_send(param_host.msg_to_raspi[6])
+            #print('out',out)
+            #print('err',err)
+
+        if param_host.msg_from_raspi['VOLUME_IS_DOWN'] != param_host.param1['volume']:
+            param_host.msg_from_raspi['VOLUME_IS_DOWN'] = param_host.param1['volume']
+            param_host.msg_to_raspi[7]['VOLUME_IS_DOWN'] = param_host.param1['volume']
+            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            #out, err = proc.communicate()
+            tx2_udp_send(param_host.msg_to_raspi[7])
+            #print('out',out)
+            #print('err',err)
+
+        if param_host.msg_from_raspi['MUTE'] == True:
+            param_host.msg_from_raspi['MUTE'] = False
+            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech On.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            #out, err = proc.communicate()
+            param_host.msg_to_raspi[8]['MUTE'] = param_host.param1['mute']
+            tx2_udp_send(param_host.msg_to_raspi[8])
+            #print('out',out)
+            #print('err',err)
+
+        if param_host.msg_from_raspi['UNMUTE'] == True:
+            param_host.msg_from_raspi['UNMUTE'] = False
+            proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/Speech Off.wav"], stdout=subprocess.PIPE, universal_newlines=True)
+            #out, err = proc.communicate()
+            param_host.msg_to_raspi[9]['UNMUTE'] = param_host.param1['mute']
+            tx2_udp_send(param_host.msg_to_raspi[9])
+            #print('out',out)
+            #print('err',err)
+    
 #state machine
 #mute 和 vol+- 还未实现
-
-
 def thread_tx2_state_machine():
     while param['thread_quit'] != True:
         time.sleep(0.02)
@@ -191,6 +262,7 @@ def thread_tx2_state_machine():
                 param_host.msg_from_raspi['MEETING_IS_STARTING'] = False
                 state['tx2_state'] = 'RECORDING'
                 tx2_udp_send(param_host.msg_to_raspi[1])
+                start_new_meeting()
         elif state['tx2_state'] == 'RECORDING' :
             if param_host.param1['no_face_15min'] == True:
                 set_timer_task(1, True, False)
@@ -214,14 +286,17 @@ def thread_tx2_state_machine():
         elif state['tx2_state'] == 'END' :#结束会议
             set_timer_task(1, False, False)
             tx2_udp_send(param_host.msg_to_raspi[4])
+            end_meeting()
             state['tx2_state'] = 'IDLE'
     # 退出状态机，重置环境, 记录error log
 
 
 def thread_get_rssi():
     while param['thread_quit'] != True: 
-        rssi = wifi.get_rssi()
-        print(rssi)
+        if(platform.system() == "Linux"):
+            rssi = wifi.get_rssi()
+        else:
+            rssi = '10'# pc调试用
         if rssi.isdigit():
             param_host.msg_to_raspi[8]['WIFI_RSSI'] = rssi
             tx2_udp_send(param_host.msg_to_raspi[8])
@@ -234,7 +309,8 @@ def thread_get_rssi():
     
 
 # init thread
-_thread.start_new_thread(thread_tx2_state_machine, ())  
+_thread.start_new_thread(thread_tx2_state_machine, ())
+_thread.start_new_thread(thread_ui_reaction, ())
 _thread.start_new_thread(thread_timer_task, ())
 _thread.start_new_thread(thread_get_rssi, ())
 
