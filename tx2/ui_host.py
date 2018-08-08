@@ -95,6 +95,8 @@ def parse_udp_msg(msg):
     # 方法2：在列表中找字典中的key
     for key in msg:
         print(state)
+        #print(param_host.param1)
+        #print(param_host.msg_from_raspi)
         if param_host.msg_list_for_state_machine[state['tx2_state']].count(key) != 0:
             param_host.msg_from_raspi[key] = msg[key]
             #print(param_host.msg_from_raspi[key])
@@ -130,7 +132,7 @@ def parse_udp_msg(msg):
 # ]
     
 #udp inits
-if(platform.system() == "Linux"):
+if platform.system() == "Linux":
     server = {'IP':'10.0.5.1', 'PORT':9999}
 else:
     server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
@@ -176,23 +178,19 @@ def thread_timer_task():
 
                             
 def play_sound(file_name):
-    #print('play sound2')
-    full_file_name = "/home/nvidia/lidong/"
-    #print(full_file_name)
-    full_file_name += file_name
-    #print(full_file_name)
-    proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
+    #full_file_name = "/home/nvidia/lidong/"
+    #full_file_name += file_name
+    if platform.system() == "Linux":
+        proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
                             
 def start_new_meeting():
     #print('play sound')
     play_sound("Speech On.wav")
-    #proc = subprocess.Popen(["nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
     
     pass
 
 def end_meeting():
     play_sound("Speech Off.wav")
-    #proc = subprocess.Popen(["killall", "nvgstcapture"], stdout=subprocess.PIPE, universal_newlines=True)
     pass 
 
 #aplay -Dhw:2,0 Speech\ On.wav 
@@ -309,13 +307,15 @@ def thread_get_rssi():
         if(platform.system() == "Linux"):
             rssi = wifi.get_rssi()
         else:
-            rssi = '10'# pc调试用
+            rssi = '255'# pc调试用
         if rssi.isdigit():
             param_host.msg_to_raspi[8]['WIFI_RSSI'] = rssi
             tx2_udp_send(param_host.msg_to_raspi[8])
         else:
-            param_host.msg_to_raspi[5]['ERROR_CODE'] = 55
-            tx2_udp_send(param_host.msg_to_raspi[5])
+            param_host.msg_to_raspi[8]['WIFI_RSSI'] = 255
+            tx2_udp_send(param_host.msg_to_raspi[8])
+            # param_host.msg_to_raspi[5]['ERROR_CODE'] = 55
+            # tx2_udp_send(param_host.msg_to_raspi[5])
         time.sleep(3)
     
     

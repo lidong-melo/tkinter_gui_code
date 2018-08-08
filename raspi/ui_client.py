@@ -142,7 +142,19 @@ def fun_update_ui(flag):
     elif flag == 'set_to_unmute':
         show_widget_list(list_unmute_show)
         hide_widget_list(list_unmute_hide)
-    
+    elif flag == 'set_to_wifi':
+        if param.param1['rssi'].isdigit():
+            rssi_value = int(param.param1['rssi'])
+        if rssi_value < 40 :
+            photo_path = param.pic_path['wifi_'] +'strong.png'
+        elif rssi_value < 60 :
+            photo_path = param.pic_path['wifi_'] +'medium.png'
+        elif rssi_value < 255:
+            photo_path = param.pic_path['wifi_'] +'low.png'
+        else:
+            photo_path = param.pic_path['wifi_'] +'off.png'
+        print('photo_path',photo_path)
+        photoimage_label_wifi.config(file = photo_path)
     else:
         pass
     
@@ -236,17 +248,9 @@ def thread_update_timeout():
         pass
 
 
-
-def thread_state_machine():
+def thread_UI_update(): 
     while param.quit_msg['quit_flag'] == False:
         time.sleep(0.02)
-        
-        if param.msg_from_tx2['ERROR_CODE'] != 0:# tx2 报错
-            param.msg_from_tx2['ERROR_CODE'] = 0
-            error.error_handler('ERROR_CODE_TX2_ERROR')
-            param.msg_to_tx2[5]['ERROR_CODE'] = 0
-            udp_client.send_msg(param.msg_to_tx2[5])
-        
         #vol button
         if param.button_click['volume_down'] == True:#vol- button click
             param.button_click['volume_down'] = False
@@ -269,8 +273,30 @@ def thread_state_machine():
             param.button_click['unmute'] = False
             fun_update_ui('set_to_unmute')
             udp_client.send_msg(param.msg_to_tx2[9])
+        #wifi icon
+        if param.msg_from_tx2['WIFI_RSSI'] != -1:# tx2 报错
+            print('rssi:',param.msg_from_tx2['WIFI_RSSI'])
+            param.param1['rssi'] = param.msg_from_tx2['WIFI_RSSI']
+            param.msg_from_tx2['WIFI_RSSI'] = -1
+            param.msg_to_tx2[11]['WIFI_RSSI'] = param.param1['rssi']
+            fun_update_ui('set_to_wifi')
+            udp_client.send_msg(param.msg_to_tx2[11])
+        
+        #error icon
+        if param.msg_from_tx2['ERROR_CODE'] != 0:# tx2 报错
+            param.msg_from_tx2['ERROR_CODE'] = 0
+            error.error_handler('ERROR_CODE_TX2_ERROR')
+            param.msg_to_tx2[5]['ERROR_CODE'] = 0
+            udp_client.send_msg(param.msg_to_tx2[5])
+                
+    
         
         
+        
+#会议状态相关
+def thread_state_machine():
+    while param.quit_msg['quit_flag'] == False:
+        time.sleep(0.02)
         #ready
         if param.state['raspi_state'] == 'READY':
             #list_timer_task[0]['enable'] = True # 开启udp_send任务
@@ -568,6 +594,7 @@ _thread.start_new_thread(thread_state_machine, ())
 _thread.start_new_thread(thread_update_timeout, ())
 
 _thread.start_new_thread(thread_timer_task, ())
+_thread.start_new_thread(thread_UI_update, ())
 
 
 set_timer_task(3, True, True) #thread_quit_check

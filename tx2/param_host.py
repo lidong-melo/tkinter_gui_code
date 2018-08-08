@@ -7,8 +7,8 @@ msg_from_raspi = {
 'MEETING_IS_PAUSING':False, #3
 'MEETING_IS_RESUMING':False, #4
 'ERROR_CODE':0, #5
-'VOLUME_IS_UP':5, #6
-'VOLUME_IS_DOWN':5, #7
+'VOLUME_IS_UP':-1, #6
+'VOLUME_IS_DOWN':-1, #7
 'MUTE':False, #8
 'UNMUTE':False, #9
 'RASPI_IS_IDLE':False, #10
@@ -33,8 +33,8 @@ msg_to_raspi = [
 {"TX2_END_MEETING":True}, #3
 {"MEETING_IS_END":True}, #4
 {'ERROR_CODE':0}, #5
-{'VOLUME_IS_UP':0}, #6
-{'VOLUME_IS_DOWN':0}, #7
+{'VOLUME_IS_UP':-1}, #6
+{'VOLUME_IS_DOWN':-1}, #7
 {'WIFI_RSSI':0}, #8
 {'MUTE':True}, #9
 {'UNMUTE':True}, #10

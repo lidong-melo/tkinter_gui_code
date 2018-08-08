@@ -10,13 +10,13 @@ else:
 
     
     
-param1 = {'volume':5, 'volume_adjust_timeout':0, 'shake_timeout':0}
+param1 = {'volume':5, 'volume_adjust_timeout':0, 'shake_timeout':0, 'rssi':-1}
 param2 = {'SHAKE_TIMEOUT': 3}
 param3 = {'meeting_status':'READY', 'old_time':0, 'new_time':0, 'pause_time':0, 'time_str':'00:00:00', 'angle':0}
 
 ui_flag = {'loading_flag':False}
 
-msg = {'msg_type':'r2t','status':False, 'volumn':0}
+#msg = {'msg_type':'r2t','status':False, 'volumn':0}
 
 #msg_list_1 = ['ERROR CODE is 33','SYSTEM IS READY', 'MEETING IS START', 'TX2 END MEETING', 'MEETING IS END']
 
@@ -35,7 +35,8 @@ msg_to_tx2 = [
 {'VOLUME_IS_DOWN':0}, #7
 {'MUTE':True}, #8
 {'UNMUTE':True}, #9
-
+{'RESET_MEETING':False},#10
+{'WIFI_RSSI':0},#11
 ]
 
 msg_from_tx2 = {
@@ -47,17 +48,21 @@ msg_from_tx2 = {
 'MEETING_IS_END':False,
 'ERROR_CODE':0,
 'VOLUME_IS_UP':0,
-'VOLUME_IS_DOWN':0
+'VOLUME_IS_DOWN':0,
+'MUTE':False,
+'UNMUTE':False, 
+'RESET_MEETING':False,
+'WIFI_RSSI':-1,
 }
 
 #根据不同状态机，响应不同消息
 msg_list_for_state_machine={
-'READY':['SYSTEM_IS_READY','ERROR_CODE'],
-'IDLE':['ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
-'START_LOADING':['MEETING_IS_RECORDING','ERROR_CODE'],
-'RECORDING':['TX2_END_MEETING','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
-'PAUSED':['MEETING_IS_PAUSED','TX2_END_MEETING','MEETING_IS_END','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN'],
-'END_LOADING':['MEETING_IS_END','ERROR_CODE']
+'READY':['SYSTEM_IS_READY','ERROR_CODE','WIFI_RSSI',],
+'IDLE':['ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN','WIFI_RSSI',],
+'START_LOADING':['MEETING_IS_RECORDING','ERROR_CODE','WIFI_RSSI',],
+'RECORDING':['TX2_END_MEETING','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN','MUTE','UNMUTE','WIFI_RSSI',],
+'PAUSED':['MEETING_IS_PAUSED','TX2_END_MEETING','MEETING_IS_END','ERROR_CODE','VOLUME_IS_UP','VOLUME_IS_DOWN','MUTE','UNMUTE','WIFI_RSSI',],
+'END_LOADING':['MEETING_IS_END','ERROR_CODE','WIFI_RSSI',]
 }
 
 
@@ -87,5 +92,6 @@ pic_path = {
 'label_paused': pic_dir+'label_paused.png',
 'volume_': pic_dir+'volume_',
 'volume_down_inactive': pic_dir+'volume_down_inactive.png',
-'volume_up_inactive': pic_dir+'volume_up_inactive.png'
+'volume_up_inactive': pic_dir+'volume_up_inactive.png',
+'wifi_': pic_dir+'wifi_',
 }
