@@ -72,6 +72,7 @@ def button_click(button_id):
             
 def fun_update_ui(flag):
     if flag == 'set_to_ready':
+        hide_widget_list(list_bootup_greeting_hide)
         show_widget_list(list_bootup_greeting_show)
         
     elif flag == 'set_to_idle':
@@ -153,7 +154,6 @@ def fun_update_ui(flag):
             photo_path = param.pic_path['wifi_'] +'low.png'
         else:
             photo_path = param.pic_path['wifi_'] +'off.png'
-        print('photo_path',photo_path)
         photoimage_label_wifi.config(file = photo_path)
     else:
         pass
@@ -205,14 +205,6 @@ def fun_update_label_time():
         except:
             pass          
 
-# Timer task   
-list_timer_task = [
-{'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':param.msg_to_tx2[0]},
-{'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},
-{'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},
-{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},
-{'name':'send_msg_raspi_status', 'enable':False, 'interval':3, 'countdown':3, 'callback':udp_client.send_msg, 'arg':param.state}
-]
 
 
 def set_timer_task(task_id, enable, reset):
@@ -236,7 +228,17 @@ def thread_timer_task():
                         else:
                             task['callback']()
                         
-
+def raspi_state_watch_dog():
+    print('state-->raspi:',param.state['raspi_state'], 'tx2:',param.msg_from_tx2['tx2_state'])
+    if param.state['raspi_state'] == param.msg_from_tx2['tx2_state']:
+        param.msg_from_tx2['tx2_state'] = 'READY'
+        param.watch_dog['timeout'] = param.watch_dog['interval']
+    elif param.watch_dog['timeout'] > 0:
+        param.watch_dog['timeout'] -= 1
+    else:
+        print("------------------------ a ----------------------")
+        param.watch_dog['watch_dog_timeout'] = param.watch_dog['interval']
+        param.state['reset_raspi_state'] = True
 
 
 def thread_update_timeout():
@@ -246,6 +248,17 @@ def thread_update_timeout():
             if value > 0:
                 param.timeout[key] -= 1
         pass
+
+        
+# Timer task   
+list_timer_task = [
+{'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':param.msg_to_tx2[0]},#0
+{'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},#1
+{'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},#2
+{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},#3
+{'name':'send_msg_raspi_status', 'enable':False, 'interval':3, 'countdown':3, 'callback':udp_client.send_msg, 'arg':param.state},#4
+{'name':'raspi_state_watch_dog', 'enable':False, 'interval':1, 'countdown':1, 'callback':raspi_state_watch_dog},#5
+]
 
 
 def thread_UI_update(): 
@@ -297,7 +310,12 @@ def thread_UI_update():
 def thread_state_machine():
     while param.quit_msg['quit_flag'] == False:
         time.sleep(0.02)
-        #ready
+        
+        if param.state['reset_raspi_state'] == True:
+            param.state['reset_raspi_state'] = False
+            param.state['raspi_state'] = 'RESET'
+        
+        #ready   
         if param.state['raspi_state'] == 'READY':
             #list_timer_task[0]['enable'] = True # 开启udp_send任务
             set_timer_task(0, True, False)
@@ -315,7 +333,6 @@ def thread_state_machine():
                 print(param.state['raspi_state'])
                 fun_update_ui('set_to_idle')
 
-                
         #idle
         elif param.state['raspi_state'] == 'IDLE':
             # 按键启动会议
@@ -385,7 +402,6 @@ def thread_state_machine():
                 param.msg_from_tx2['TX2_END_MEETING'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
-                print(param.state['raspi_state'])
                 udp_client.send_msg(param.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
                 
@@ -393,14 +409,12 @@ def thread_state_machine():
                 param.button_click['end_meeting'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
-                print(param.state['raspi_state'])
                 udp_client.send_msg(param.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
 
             if param.button_click['resume'] == True:#resume button click
                 param.button_click['resume'] = False
                 param.state['raspi_state'] = 'RECORDING'
-                print(param.state['raspi_state'])
                 udp_client.send_msg(param.msg_to_tx2[4])
                 fun_update_ui('set_to_resume')      
         
@@ -411,24 +425,28 @@ def thread_state_machine():
                 
                 ##--> just for debug #调试用，后续删掉
                 param.state['raspi_state'] = 'END'
-                print(param.state['raspi_state'])
                 fun_update_ui('set_to_end')
                 ##<--
             elif param.msg_from_tx2['MEETING_IS_END'] == True:#recv msg from tx2
                 param.msg_from_tx2['MEETING_IS_END'] = False
                 param.state['raspi_state'] = 'END'
-                print(param.state['raspi_state'])
                 fun_update_ui('set_to_end')
                 
         elif param.state['raspi_state'] == 'END':
-            set_timer_task(1, False, False)
+            set_timer_task(1, False, False)#end meeting
             param.state['raspi_state'] = 'IDLE'
-            print(param.state['raspi_state'])
             fun_update_ui('set_to_idle')
             # 清空之前的按键事件缓存
             for key, value in param.button_click.items():
                 param.button_click[key] = False
-        
+                
+        elif param.state['raspi_state'] == 'RESET':
+            fun_update_ui('set_to_ready')
+            # 清空之前的按键事件缓存
+            for key, value in param.button_click.items():
+                param.button_click[key] = False
+            param.state['raspi_state'] = 'READY'
+            
         else:
             error.error['error_code'] = error.error_code_list['ERROR_CODE_STATE_UNKNOWN']
             pass
@@ -531,7 +549,7 @@ id(canvas_meeting_end_loading):[64, 64, 128, 88],
 list_all_widgets = [root, label_wifi, button_mute, button_unmute, label_muted, button_pause, label_volume, button_meeting_end, button_volume_down, button_volume_up,  button_resume, button_meeting_start, label_error, label_time, canvas_meeting_start_loading, canvas_meeting_end_loading]
 
 list_bootup_greeting_show = [label_bootup_greeting]
-
+list_bootup_greeting_hide = [label_wifi, button_mute, button_unmute, label_muted, button_pause, label_volume, button_meeting_end, button_volume_down, button_volume_up,  button_resume, button_meeting_start, label_error, label_time, canvas_meeting_start_loading, canvas_meeting_end_loading]
 
 list_meeting_start_show = [button_mute, button_meeting_end, button_pause, label_time]
 list_meeting_start_hide = [canvas_meeting_start_loading, label_bootup_greeting, button_unmute,  label_muted, button_resume, button_meeting_start]
@@ -599,6 +617,7 @@ _thread.start_new_thread(thread_UI_update, ())
 
 set_timer_task(3, True, True) #thread_quit_check
 set_timer_task(4, True, True) #loop send state 
+set_timer_task(5, True, True) #raspi state watch dog
 
 fun_update_ui('set_to_ready')
 
