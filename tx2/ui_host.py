@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+#coding:utf-8
+
 import tkinter as tk
 import tkinter
 from tkinter import Button, PhotoImage, Label

@@ -2,7 +2,7 @@ import platform
 import sys
 
 if(platform.system() == "Linux"):
-    pic_dir = 'icons/'
+    pic_dir = '/home/pi/share/raspi/icons/'
 else:
     pic_dir = str(sys.path[0] + "\\icons\\")
     print(pic_dir)
