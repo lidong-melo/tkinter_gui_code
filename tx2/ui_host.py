@@ -244,6 +244,7 @@ def thread_tx2_state_machine():
             state['reset_tx2_state'] = False
             state['tx2_state'] = 'RESET'
         if state['tx2_state'] == 'READY' :
+            #if a113 is ready && raspi is ready 暂时只实现了raspi部分
             if param_host.msg_from_raspi['RASPI_IS_READY'] == True:
                 param_host.msg_from_raspi['RASPI_IS_READY'] = False
                 state['tx2_state'] = 'IDLE'
@@ -257,8 +258,9 @@ def thread_tx2_state_machine():
                 state['tx2_state'] = 'RECORDING'
                 tx2_udp_send(param_host.msg_to_raspi[1])
                 start_new_meeting()
+                
         elif state['tx2_state'] == 'RECORDING' :
-            if param_host.param1['no_face_15min'] == True:
+            if param_host.param1['no_face_15min'] == True: # 15min noface
                 set_timer_task(1, True, False)#end meeting
                 #tx2_udp_send(param_host.msg_to_raspi[4])  
             if param_host.msg_from_raspi['MEETING_IS_ENDING'] == True:
@@ -268,20 +270,30 @@ def thread_tx2_state_machine():
                 param_host.msg_from_raspi['MEETING_IS_PAUSING'] = False            
                 state['tx2_state'] = 'PAUSED'
                 tx2_udp_send(param_host.msg_to_raspi[2])
-        elif state['tx2_state'] == 'PAUSED' :
+                
+        elif state['tx2_state'] == 'RECORDING' :
             if param_host.msg_from_raspi['MEETING_IS_ENDING'] == True:
                 param_host.msg_from_raspi['MEETING_IS_ENDING'] = False            
+                state['tx2_state'] = 'END'
+            
+
+                
+        elif state['tx2_state'] == 'PAUSED' :
+            if param_host.msg_from_raspi['MEETING_IS_ENDING'] == True:
+                param_host.msg_from_raspi['MEETING_IS_ENDING'] = False
                 state['tx2_state'] = 'END'
                 
             elif param_host.msg_from_raspi['MEETING_IS_RESUMING'] == True:
                 param_host.msg_from_raspi['MEETING_IS_RESUMING'] = False            
                 state['tx2_state'] = 'RECORDING'
                 tx2_udp_send(param_host.msg_to_raspi[1])
+                
         elif state['tx2_state'] == 'END' :#结束会议
-            set_timer_task(1, False, False)#end meeting
+            set_timer_task(1, False, False)#end meeting 
             tx2_udp_send(param_host.msg_to_raspi[4])
             end_meeting()
             state['tx2_state'] = 'IDLE'
+            
         elif state['tx2_state'] == 'RESET' :
             print('reset tx2')
             #set_timer_task(1, False, False)#end meeting
