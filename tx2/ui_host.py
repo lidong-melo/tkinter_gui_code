@@ -124,34 +124,7 @@ def tx2_status_watch_dog():
         state['reset_tx2_state'] = True
     
         
-        
-
-    
-# def thread_udp_recv():
-    # while param['thread_quit'] == False:
-        # print ('...waiting for message..'  )
-        # try:
-            # data,address_recv = s.recvfrom(1024)
-            # address_list.clear()
-            # address_list_temp = list(address_recv)
-            # address_list.append(address_list_temp[0])
-            # address_list.append(address_list_temp[1])
-            # print('recv',address_list)
-            
-        # except:
-            # pass
-
-# UI init
-# msg_to_raspi = [
-# {"SYSTEM_IS_READY": True},
-# {"MEETING_IS_RECORDING": True},
-# {'MEETING_IS_PAUSED':True},
-# {"TX2_END_MEETING":True},
-# {"MEETING_IS_END":True},
-# {'ERROR_CODE':0},
-# {'VOLUME_IS_UP':0}, 
-# {'VOLUME_IS_DOWN':0}
-# ]
+       
     
 #udp inits
 if platform.system() == "Linux":
@@ -217,23 +190,6 @@ def end_meeting():
     play_sound("Speech Off.wav")
     pass 
 
-#aplay -Dhw:2,0 Speech\ On.wav 
-# def volume_up():
-    # print('volume up')
-
-    # pass
-    
-# def volume_down():
-    # print('volume down')
-
-    # pass    
-
-# def mute():
-    # print('mute')
-
-
-# def unmute():
-    # print('unmute')
 
 
 def thread_ui_reaction():
