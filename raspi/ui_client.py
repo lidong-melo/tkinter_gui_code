@@ -103,7 +103,7 @@ def fun_update_ui(flag):
         
     elif flag == 'set_to_vol_up':
         #volume_adjust_show
-        label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
+        label_volume.place(x = icon_pos[id(label_volume)][2], y = icon_pos[id(label_volume)][3])
         photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
         photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
         #param.param1['volume_adjust_timeout'] = 2
@@ -116,7 +116,7 @@ def fun_update_ui(flag):
             
     elif flag == 'set_to_vol_down':
         #volume_adjust_show
-        label_volume.place(x = pos[id(label_volume)][2], y = pos[id(label_volume)][3])
+        label_volume.place(x = icon_pos[id(label_volume)][2], y = icon_pos[id(label_volume)][3])
         photoimage_button_volume_down.config(file = param.pic_path['volume_down'])
         photoimage_button_volume_up.config(file = param.pic_path['volume_up'])
         #param.param1['volume_adjust_timeout'] = 2
@@ -162,7 +162,7 @@ def fun_update_ui(flag):
 
 def show_widget_list(widget_list):
     for widget in widget_list:
-        widget.place(x = pos[id(widget)][2], y = pos[id(widget)][3])
+        widget.place(x = icon_pos[id(widget)][2], y = icon_pos[id(widget)][3])
 
 
 def hide_widget_list(widget_list):
@@ -524,24 +524,25 @@ button_meeting_start = Button(root, text="OK", command=lambda: button_click(butt
 canvas_meeting_start_loading= Canvas(root, width=120, height=120)
 canvas_meeting_end_loading= Canvas(root, width=64, height=64)
 
-pos = {
+icon_pos_offset= {'x':0, 'y':0}
+icon_pos = {
 ## 顺序为 width，height，x，y
-id(label_wifi): [18, 18, 151, 5],
-id(button_volume_down): [50, 50, 36, 96],
-id(button_volume_up): [50, 50, 234, 96],
-id(button_mute): [50, 50, 135, 24],
-id(button_unmute): [50, 50, 135, 24],
-id(label_muted): [64, 16, 128, 69],
-id(button_meeting_start): [120, 120, 100, 60],
-id(button_meeting_end): [64, 64, 128, 88],
-id(button_pause): [50, 45, 135, 166],
-id(button_resume): [50, 45, 135, 166],
-id(label_volume): [200, 84, 60, 138],
-id(label_error): [18, 18, 146, 222],
-id(label_time): [128, 16, 130, 156],
-id(label_bootup_greeting):[200, 84, 60, 78],
-id(canvas_meeting_start_loading):[120, 120, 100, 60],
-id(canvas_meeting_end_loading):[64, 64, 128, 88],
+id(label_wifi): [18, 18, 151+icon_pos_offset['x'], 5],
+id(button_volume_down): [50, 50, 36+icon_pos_offset['x'], 96],
+id(button_volume_up): [50, 50, 234+icon_pos_offset['x'], 96],
+id(button_mute): [50, 50, 135+icon_pos_offset['x'], 24],
+id(button_unmute): [50, 50, 135+icon_pos_offset['x'], 24],
+id(label_muted): [64, 16, 128+icon_pos_offset['x'], 69],
+id(button_meeting_start): [120, 120, 100+icon_pos_offset['x'], 60],
+id(button_meeting_end): [64, 64, 128+icon_pos_offset['x'], 88],
+id(button_pause): [50, 45, 135+icon_pos_offset['x'], 166],
+id(button_resume): [50, 45, 135+icon_pos_offset['x'], 166],
+id(label_volume): [200, 84, 60+icon_pos_offset['x'], 138],
+id(label_error): [18, 18, 146+icon_pos_offset['x'], 222],
+id(label_time): [128, 16, 130+icon_pos_offset['x'], 156],
+id(label_bootup_greeting):[200, 84, 60+icon_pos_offset['x'], 78],
+id(canvas_meeting_start_loading):[120, 120, 100+icon_pos_offset['x'], 60],
+id(canvas_meeting_end_loading):[64, 64, 128+icon_pos_offset['x'], 88],
 }
 
 ## list of show & hide
