@@ -144,8 +144,11 @@ def fun_update_ui(flag):
         show_widget_list(list_unmute_show)
         hide_widget_list(list_unmute_hide)
     elif flag == 'set_to_wifi':
-        if param.param1['rssi'].isdigit():
-            rssi_value = int(param.param1['rssi'])
+        try:
+            if param.param1['rssi'].isdigit():
+                rssi_value = int(param.param1['rssi'])
+        except:
+            rssi_value = param.param1['rssi']
         if rssi_value < 40 :
             photo_path = param.pic_path['wifi_'] +'strong.png'
         elif rssi_value < 60 :
@@ -524,25 +527,25 @@ button_meeting_start = Button(root, text="OK", command=lambda: button_click(butt
 canvas_meeting_start_loading= Canvas(root, width=120, height=120)
 canvas_meeting_end_loading= Canvas(root, width=64, height=64)
 
-icon_pos_offset= {'x':0, 'y':0}
+icon_pos_offset= {'x':-16, 'y':6}
 icon_pos = {
 ## 顺序为 width，height，x，y
-id(label_wifi): [18, 18, 151+icon_pos_offset['x'], 5],
-id(button_volume_down): [50, 50, 36+icon_pos_offset['x'], 96],
-id(button_volume_up): [50, 50, 234+icon_pos_offset['x'], 96],
-id(button_mute): [50, 50, 135+icon_pos_offset['x'], 24],
-id(button_unmute): [50, 50, 135+icon_pos_offset['x'], 24],
-id(label_muted): [64, 16, 128+icon_pos_offset['x'], 69],
-id(button_meeting_start): [120, 120, 100+icon_pos_offset['x'], 60],
-id(button_meeting_end): [64, 64, 128+icon_pos_offset['x'], 88],
-id(button_pause): [50, 45, 135+icon_pos_offset['x'], 166],
-id(button_resume): [50, 45, 135+icon_pos_offset['x'], 166],
-id(label_volume): [200, 84, 60+icon_pos_offset['x'], 138],
-id(label_error): [18, 18, 146+icon_pos_offset['x'], 222],
-id(label_time): [128, 16, 130+icon_pos_offset['x'], 156],
-id(label_bootup_greeting):[200, 84, 60+icon_pos_offset['x'], 78],
-id(canvas_meeting_start_loading):[120, 120, 100+icon_pos_offset['x'], 60],
-id(canvas_meeting_end_loading):[64, 64, 128+icon_pos_offset['x'], 88],
+id(label_wifi): [18, 18, 151+icon_pos_offset['x'], 5+icon_pos_offset['y']],
+id(button_volume_down): [50, 50, 36+icon_pos_offset['x'], 96+icon_pos_offset['y']],
+id(button_volume_up): [50, 50, 234+icon_pos_offset['x'], 96+icon_pos_offset['y']],
+id(button_mute): [50, 50, 135+icon_pos_offset['x'], 24+icon_pos_offset['y']],
+id(button_unmute): [50, 50, 135+icon_pos_offset['x'], 24+icon_pos_offset['y']],
+id(label_muted): [64, 16, 128+icon_pos_offset['x'], 69+icon_pos_offset['y']],
+id(button_meeting_start): [120, 120, 100+icon_pos_offset['x'], 60+icon_pos_offset['y']],
+id(button_meeting_end): [64, 64, 128+icon_pos_offset['x'], 88+icon_pos_offset['y']],
+id(button_pause): [50, 45, 135+icon_pos_offset['x'], 166+icon_pos_offset['y']],
+id(button_resume): [50, 45, 135+icon_pos_offset['x'], 166+icon_pos_offset['y']],
+id(label_volume): [200, 84, 60+icon_pos_offset['x'], 138+icon_pos_offset['y']],
+id(label_error): [18, 18, 146+icon_pos_offset['x'], 222+icon_pos_offset['y']],
+id(label_time): [128, 16, 130+icon_pos_offset['x'], 156+icon_pos_offset['y']],
+id(label_bootup_greeting):[200, 84, 60+icon_pos_offset['x'], 78+icon_pos_offset['y']],
+id(canvas_meeting_start_loading):[120, 120, 100+icon_pos_offset['x'], 60+icon_pos_offset['y']],
+id(canvas_meeting_end_loading):[64, 64, 128+icon_pos_offset['x'], 88+icon_pos_offset['y']],
 }
 
 ## list of show & hide
