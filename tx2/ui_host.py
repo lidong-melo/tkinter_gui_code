@@ -205,8 +205,6 @@ def thread_tx2_state_machine():
             
         elif param_host.state['tx2_state'] == 'RESET' :
             print('reset tx2')
-            #set_timer_task(1, False, False)#end meeting
-            #udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])
             end_meeting()
             param_host.state['tx2_state'] = 'READY'
     # 退出状态机，重置环境, 记录error log

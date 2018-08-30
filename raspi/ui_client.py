@@ -7,6 +7,7 @@ from tkinter import Button, PhotoImage, Label, Canvas
 import _thread
 import time
 import datetime
+import msg_list
 
 
 
@@ -232,9 +233,9 @@ def thread_timer_task():
                             task['callback']()
                         
 def raspi_state_watch_dog():
-    print('state-->raspi:',param.state['raspi_state'], 'tx2:',param.msg_from_tx2['tx2_state'])
-    if param.state['raspi_state'] == param.msg_from_tx2['tx2_state']:
-        param.msg_from_tx2['tx2_state'] = 'READY'
+    print('state-->raspi:',param.state['raspi_state'], 'tx2:',msg_list.msg_from_tx2['tx2_state'])
+    if param.state['raspi_state'] == msg_list.msg_from_tx2['tx2_state']:
+        msg_list.msg_from_tx2['tx2_state'] = 'READY'
         param.watch_dog['timeout'] = param.watch_dog['interval']
     elif param.watch_dog['timeout'] > 0:
         param.watch_dog['timeout'] -= 1
@@ -255,7 +256,7 @@ def thread_update_timeout():
         
 # Timer task   
 list_timer_task = [
-{'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':param.msg_to_tx2[0]},#0
+{'name':'udp_send_msg', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_client.send_msg, 'arg':msg_list.msg_to_tx2[0]},#0
 {'name':'update_label_time', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_update_label_time},#1
 {'name':'change_volume_icon', 'enable':False, 'interval':2, 'countdown':2, 'callback':fun_change_volume_icon},#2
 {'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},#3
@@ -271,39 +272,39 @@ def thread_UI_update():
         if param.button_click['volume_down'] == True:#vol- button click
             param.button_click['volume_down'] = False
             fun_update_ui('set_to_vol_down')
-            param.msg_to_tx2[7]['VOLUME_IS_DOWN'] = param.param1['volume']
-            udp_client.send_msg(param.msg_to_tx2[7])
+            msg_list.msg_to_tx2[7]['VOLUME_IS_DOWN'] = param.param1['volume']
+            udp_client.send_msg(msg_list.msg_to_tx2[7])
 
         if param.button_click['volume_up'] == True:#vol+ button click
             param.button_click['volume_up'] = False
             fun_update_ui('set_to_vol_up')
-            param.msg_to_tx2[6]['VOLUME_IS_UP'] = param.param1['volume']
-            udp_client.send_msg(param.msg_to_tx2[6])
+            msg_list.msg_to_tx2[6]['VOLUME_IS_UP'] = param.param1['volume']
+            udp_client.send_msg(msg_list.msg_to_tx2[6])
         #mute button    
         if param.button_click['mute'] == True:#mute button click
             param.button_click['mute'] = False
             fun_update_ui('set_to_mute')
-            udp_client.send_msg(param.msg_to_tx2[8])
+            udp_client.send_msg(msg_list.msg_to_tx2[8])
         
         if param.button_click['unmute'] == True:#unmute button click
             param.button_click['unmute'] = False
             fun_update_ui('set_to_unmute')
-            udp_client.send_msg(param.msg_to_tx2[9])
+            udp_client.send_msg(msg_list.msg_to_tx2[9])
         #wifi icon
-        if param.msg_from_tx2['WIFI_RSSI'] != -1:# tx2 报错
-            print('rssi:',param.msg_from_tx2['WIFI_RSSI'])
-            param.param1['rssi'] = param.msg_from_tx2['WIFI_RSSI']
-            param.msg_from_tx2['WIFI_RSSI'] = -1
-            param.msg_to_tx2[11]['WIFI_RSSI'] = param.param1['rssi']
+        if msg_list.msg_from_tx2['WIFI_RSSI'] != -1:# tx2 报错
+            print('rssi:',msg_list.msg_from_tx2['WIFI_RSSI'])
+            param.param1['rssi'] = msg_list.msg_from_tx2['WIFI_RSSI']
+            msg_list.msg_from_tx2['WIFI_RSSI'] = -1
+            msg_list.msg_to_tx2[11]['WIFI_RSSI'] = param.param1['rssi']
             fun_update_ui('set_to_wifi')
-            udp_client.send_msg(param.msg_to_tx2[11])
+            udp_client.send_msg(msg_list.msg_to_tx2[11])
         
         #error icon
-        if param.msg_from_tx2['ERROR_CODE'] != 0:# tx2 报错
-            param.msg_from_tx2['ERROR_CODE'] = 0
+        if msg_list.msg_from_tx2['ERROR_CODE'] != 0:# tx2 报错
+            msg_list.msg_from_tx2['ERROR_CODE'] = 0
             error.error_handler('ERROR_CODE_TX2_ERROR')
-            param.msg_to_tx2[5]['ERROR_CODE'] = 0
-            udp_client.send_msg(param.msg_to_tx2[5])
+            msg_list.msg_to_tx2[5]['ERROR_CODE'] = 0
+            udp_client.send_msg(msg_list.msg_to_tx2[5])
                 
     
         
@@ -330,8 +331,8 @@ def thread_state_machine():
                 print(param.state['raspi_state'])
                 fun_update_ui('set_to_idle')
 
-            elif param.msg_from_tx2['SYSTEM_IS_READY'] == True:#recv msg from tx2
-                param.msg_from_tx2['SYSTEM_IS_READY'] = False
+            elif msg_list.msg_from_tx2['SYSTEM_IS_READY'] == True:#recv msg from tx2
+                msg_list.msg_from_tx2['SYSTEM_IS_READY'] = False
                 param.state['raspi_state'] = 'IDLE'
                 print(param.state['raspi_state'])
                 fun_update_ui('set_to_idle')
@@ -345,7 +346,7 @@ def thread_state_machine():
                 #param.timeout['START_LOADING'] = 3
                 param.state['raspi_state'] = 'START_LOADING'
                 print(param.state['raspi_state'])
-                udp_client.send_msg(param.msg_to_tx2[1])
+                udp_client.send_msg(msg_list.msg_to_tx2[1])
                 fun_update_ui('set_to_start_loading')
 
         #start loading
@@ -362,8 +363,8 @@ def thread_state_machine():
                 param.param3['time_str'] = '00 : 00 : 00'
                 fun_update_ui('set_to_recording')
                 ##<--
-            elif param.msg_from_tx2['MEETING_IS_RECORDING'] == True:#recv msg from tx2
-                param.msg_from_tx2['MEETING_IS_RECORDING'] = False
+            elif msg_list.msg_from_tx2['MEETING_IS_RECORDING'] == True:#recv msg from tx2
+                msg_list.msg_from_tx2['MEETING_IS_RECORDING'] = False
                 param.state['raspi_state'] = 'RECORDING'
                 print(param.state['raspi_state'])
                 fun_update_ui('set_to_recording')
@@ -376,12 +377,12 @@ def thread_state_machine():
         #recording        
         elif param.state['raspi_state'] == 'RECORDING':
             set_timer_task(1, True, False)
-            if param.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
-                param.msg_from_tx2['TX2_END_MEETING'] = False
+            if msg_list.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                msg_list.msg_from_tx2['TX2_END_MEETING'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
                 print(param.state['raspi_state'])
-                udp_client.send_msg(param.msg_to_tx2[2])
+                udp_client.send_msg(msg_list.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
                 
             if param.button_click['end_meeting'] == True:#end button click
@@ -389,36 +390,36 @@ def thread_state_machine():
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
                 print(param.state['raspi_state'])
-                udp_client.send_msg(param.msg_to_tx2[2])
+                udp_client.send_msg(msg_list.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
             
             if param.button_click['pause'] == True:#pause button click
                 param.button_click['pause'] = False
-                udp_client.send_msg(param.msg_to_tx2[3])
+                udp_client.send_msg(msg_list.msg_to_tx2[3])
                 param.state['raspi_state'] = 'PAUSED'
                 print(param.state['raspi_state'])
                 fun_update_ui('set_to_pause')
             
         #paused
         elif param.state['raspi_state'] == 'PAUSED':
-            if param.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
-                param.msg_from_tx2['TX2_END_MEETING'] = False
+            if msg_list.msg_from_tx2['TX2_END_MEETING'] == True:# 15m no-face detect tx2 end meeting
+                msg_list.msg_from_tx2['TX2_END_MEETING'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
-                udp_client.send_msg(param.msg_to_tx2[2])
+                udp_client.send_msg(msg_list.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
                 
             if param.button_click['end_meeting'] == True:#end button click
                 param.button_click['end_meeting'] = False
                 #param.timeout['END_LOADING'] = 3
                 param.state['raspi_state'] = 'END_LOADING'
-                udp_client.send_msg(param.msg_to_tx2[2])
+                udp_client.send_msg(msg_list.msg_to_tx2[2])
                 fun_update_ui('set_to_end_loading')
 
             if param.button_click['resume'] == True:#resume button click
                 param.button_click['resume'] = False
                 param.state['raspi_state'] = 'RECORDING'
-                udp_client.send_msg(param.msg_to_tx2[4])
+                udp_client.send_msg(msg_list.msg_to_tx2[4])
                 fun_update_ui('set_to_resume')      
         
         #end loading
@@ -430,8 +431,8 @@ def thread_state_machine():
                 param.state['raspi_state'] = 'END'
                 fun_update_ui('set_to_end')
                 ##<--
-            elif param.msg_from_tx2['MEETING_IS_END'] == True:#recv msg from tx2
-                param.msg_from_tx2['MEETING_IS_END'] = False
+            elif msg_list.msg_from_tx2['MEETING_IS_END'] == True:#recv msg from tx2
+                msg_list.msg_from_tx2['MEETING_IS_END'] = False
                 param.state['raspi_state'] = 'END'
                 fun_update_ui('set_to_end')
                 
