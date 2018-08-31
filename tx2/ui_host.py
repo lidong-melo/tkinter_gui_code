@@ -1,37 +1,33 @@
 #!/usr/bin/python3
 #coding:utf-8
 
-import tkinter as tk
-from tkinter import Button, PhotoImage, Label
+import param_host
+import os
+    
 import datetime
-
-
-# from socket import *
-# import json
 import time
 import _thread
 import platform
-import param_host
 import msg_list
 import wifi
 import udp_host
 import subprocess
-
+import psutil
 #import serial
+
 
 
 def fun_thread_quit_check():
 # if ui quit, tell other threads to quit
-        try:
-            root.cget('bg')
-        except:
-            param_host.flag['thread_quit'] = True
-            s.close()
+    try:
+        pass
+        # if param_host.param1['display'] == True:
+            # root.cget('bg')
+    except:
+        param_host.flag['thread_quit'] = True
+        s.close()
 
     
-
-def update_label_status(state):
-    label_status.config(text=str(state))
     
     
 def tx2_status_watch_dog():
@@ -52,8 +48,8 @@ list_timer_task = [
 {'name':'send_msg_end_meeting', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_host.tx2_udp_send, 'arg':msg_list.msg_to_raspi[3]},#1 end meeting
 {'name':'send_msg_tx2_status', 'enable':False, 'interval':3, 'countdown':3, 'callback':udp_host.tx2_udp_send, 'arg':param_host.state},#2
 {'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},#3
-{'name':'update_label_status', 'enable':False, 'interval':1, 'countdown':1, 'callback':update_label_status, 'arg':param_host.state},#4
-{'name':'tx2_status_watch_dog', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_status_watch_dog},#5
+#{'name':'update_label_status', 'enable':False, 'interval':1, 'countdown':1, 'callback':update_label_status, 'arg':param_host.state},#4
+{'name':'tx2_status_watch_dog', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_status_watch_dog},#4
 ]
 
 def set_timer_task(task_id, enable, reset):
@@ -97,15 +93,75 @@ def play_sound(file_name):
     pass
     # if platform.system() == "Linux":
         # proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
-                            
-def start_new_meeting():
-    play_sound("Speech On.wav")
+
+
+def thread_launch_process():
+#time cost is 1.71s, need sudo, otherwise it would be fail and the time cost is 17ms
+    print('~~~~~~~~~~~~thread~~~~~~~~~~~~')
+    if platform.system() == "Linux":
+        proc = subprocess.Popen(["xterm"], stdout=subprocess.PIPE, universal_newlines=True)
+        print("proc=======================",proc)
+    else:
+        os.system('notepad.exe')
+        
+        
+def thread_process_watchdog():
+    pid_to_kill = find_meeting_process
     
-    pass
+    
+
+
+def find_meeting_process():
+    try:
+        # time cost 0.1s
+        print('start--------',time.time())
+        pids = psutil.pids()
+        print('end--------',time.time())
+        for pid in pids:
+            if pid > 10000:
+                p = psutil.Process(pid)
+                #enable print time cost is 2s
+                print(pid)
+                if (platform.system() == "Linux"):
+                    if str(p.name()).find('aplay') != -1:
+                        print('find meeting daemon, pid - %d, pname - %s'%(pid,p.name()))
+                        return pid
+                else:
+                    if p.name() == 'notepad.exe':
+                        print('find meeting daemon, pid - %d, pname - %s'%(pid,p.name()))
+                        return pid
+
+        return 0
+    except:
+        return -1
+        
+def start_new_meeting():
+    error_code = 0
+    try:
+        _thread.start_new_thread(thread_launch_process, ())
+    except:
+        return error_code
 
 def end_meeting():
-    play_sound("Speech Off.wav")
-    pass 
+    error_code = 0
+    try:
+        print('~~~~~~~~~~~~~~~~~~~~~~try to stop')
+        pid_to_kill = find_meeting_process()
+        if pid_to_kill == 0:
+            print("can't find meeting daemon---------------------------")
+        elif pid_to_kill == -1:
+            print('error when listing process---------------------------')
+        else:
+            if(platform.system() == "Linux"):
+                command = 'kill ' + str(pid_to_kill)
+            else:
+                command = 'taskkill /pid ' + str(pid_to_kill) +  ' -f'
+            print('command:',command)
+            os.system(command)
+            print('~~~~~~~~~~~~~~~~~~~~~~stop ok')
+    except:
+        return error_code
+        
 
 
 
@@ -173,8 +229,8 @@ def thread_tx2_state_machine():
                 set_timer_task(1, True, False)#end meeting
                 #udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])  
             if msg_list.msg_from_raspi['MEETING_IS_ENDING'] == True:
-                msg_list.msg_from_raspi['MEETING_IS_ENDING'] = False            
-                param_host.state['tx2_state'] = 'END'               
+                msg_list.msg_from_raspi['MEETING_IS_ENDING'] = False
+                param_host.state['tx2_state'] = 'END'           
             if msg_list.msg_from_raspi['MEETING_IS_PAUSING'] == True:
                 msg_list.msg_from_raspi['MEETING_IS_PAUSING'] = False            
                 param_host.state['tx2_state'] = 'PAUSED'
@@ -198,9 +254,9 @@ def thread_tx2_state_machine():
                 udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
                 
         elif param_host.state['tx2_state'] == 'END' :#结束会议
+            end_meeting()
             set_timer_task(1, False, False)#end meeting 
             udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])
-            end_meeting()
             param_host.state['tx2_state'] = 'IDLE'
             
         elif param_host.state['tx2_state'] == 'RESET' :
@@ -219,24 +275,15 @@ _thread.start_new_thread(thread_get_rssi, ())
 
 set_timer_task(2, True, True)#loop send state
 set_timer_task(3, True, True)#thread_quit_check 
-set_timer_task(4, True, True)#update label_status
-set_timer_task(5, True, True)#tx2_status_watch_dog
+#set_timer_task(4, True, True)#update label_status
+set_timer_task(4, True, True)#tx2_status_watch_dog
 
 
-#init UI
-def button_click(button_idx):
-    udp_host.tx2_udp_send(msg_list.msg_to_raspi[button_idx])
-    
-root = tk.Tk()
-root.config(width = 250, height = 300)
 
-buttons = []
-for i in range(len(msg_list.msg_to_raspi)):
-    buttons.append(Button(root, text=list(msg_list.msg_to_raspi[i].keys())[0], command=lambda x=i: button_click(x)))
-    buttons[i].place(x=30,y=30*i+30)
-
-label_status = Label(root, text='')
-
-label_status.place(x=30,y=5)
-
-root.mainloop()
+#main loop
+while 1:
+    #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ find process::',find_meeting_process())
+    #end_meeting()
+    #start_new_meeting()
+    #time.sleep(10)
+    pass    
