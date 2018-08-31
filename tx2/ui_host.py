@@ -113,24 +113,14 @@ def thread_process_watchdog():
 
 def find_meeting_process():
     try:
-        # time cost 0.1s
-        print('start--------',time.time())
-        pids = psutil.pids()
-        print('end--------',time.time())
-        for pid in pids:
-            if pid > 10000:
-                p = psutil.Process(pid)
-                #enable print time cost is 2s
-                print(pid)
-                if (platform.system() == "Linux"):
-                    if str(p.name()).find('aplay') != -1:
-                        print('find meeting daemon, pid - %d, pname - %s'%(pid,p.name()))
-                        return pid
-                else:
-                    if p.name() == 'notepad.exe':
-                        print('find meeting daemon, pid - %d, pname - %s'%(pid,p.name()))
-                        return pid
-
+        # time cost 0.03s
+        res = subprocess.Popen('ps -ef | grep xterm',stdout=subprocess.PIPE,shell=True)
+        output_lines = res.stdout.readlines()
+        for line in output_lines:
+            if str(line).find('grep') == -1:
+                arr = str(line).split()
+                print('pid===',int(arr[1]))
+                return int(arr[1])
         return 0
     except:
         return -1
@@ -283,7 +273,5 @@ set_timer_task(4, True, True)#tx2_status_watch_dog
 #main loop
 while 1:
     #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ find process::',find_meeting_process())
-    #end_meeting()
-    #start_new_meeting()
     #time.sleep(10)
     pass    

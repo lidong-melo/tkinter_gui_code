@@ -62,13 +62,10 @@ def parse_udp_msg(msg):
     
 
 if(platform.system() == "Linux"):
-    if platform.node().find('virtual') != -1:
-        server = {'IP':'192.168.28.130', 'PORT':60000}
-    else:
-        server = {'IP':'10.0.5.1', 'PORT':9999}
+    server = {'IP':'10.0.5.1', 'PORT':9999}
 else:
-    server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
-    
+    #server = {'IP':gethostbyname(gethostname()), 'PORT':60000}
+    server = {'IP':'192.168.28.130', 'PORT':60000}
 
     
 ## create UDP socket
