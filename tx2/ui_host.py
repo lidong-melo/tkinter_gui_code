@@ -95,31 +95,15 @@ def play_sound(file_name):
         # proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
 
 
-def thread_launch_process():
+def start_new_meeting():
 #time cost is 1.71s, need sudo, otherwise it would be fail and the time cost is 17ms
-    print('~~~~~~~~~~~~thread~~~~~~~~~~~~')
     if platform.system() == "Linux":
-        proc = subprocess.Popen(["xterm"], stdout=subprocess.PIPE, universal_newlines=True)
-        print("proc=======================",proc)
+        pid = find_meeting_process()
+        if pid == 0:
+            proc = subprocess.Popen(["xterm"], stdout=subprocess.PIPE, universal_newlines=True)
+        return pid
     else:
         os.system('notepad.exe')
-        
-        
-def fun_process_monitor():
-    error_code = 0
-    try:
-        pid_to_monitor = find_meeting_process()
-        if pid_to_monitor == 0:
-            print("process is quit. 15min noface??")
-            error_code = 15
-        elif pid_to_monitor == -1:
-            error_code = -1
-        else:
-            error_code = int(pid_to_monitor)
-    except:
-        error_code = -2        
-    return error_code
-    
 
 
 def find_meeting_process():
@@ -135,13 +119,7 @@ def find_meeting_process():
         return 0
     except:
         return -1
-        
-def start_new_meeting():
-    error_code = 0
-    try:
-        _thread.start_new_thread(thread_launch_process, ())
-    except:
-        return error_code
+       
 
 def end_meeting():
     error_code = 0
@@ -221,16 +199,27 @@ def thread_tx2_state_machine():
             if msg_list.msg_from_raspi['MEETING_IS_STARTING'] == True:
                 print('meeting is starting')
                 msg_list.msg_from_raspi['MEETING_IS_STARTING'] = False
+                err = start_new_meeting()
+                if err == -1:
+                    print('list task error')
+                elif err == 0:
+                    print('launch meeting ok')
+                else:
+                    print('another meeting is running!!!!!!!!!')
+                
                 param_host.state['tx2_state'] = 'RECORDING'
                 udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
-                start_new_meeting()
+                
                 
         elif param_host.state['tx2_state'] == 'RECORDING' :
-            proc_status = fun_process_monitor()
-            if proc_status == 15:
+            pid = find_meeting_process()
+            if pid == 0:
                 set_timer_task(1, True, False)#end meeting
-            elif (proc_status == -1 or proc_status == -2):
-                print('error output')
+            elif pid == -1:
+                print('error should output')
+            else:
+                pass
+                #print('meeting is alive')
             if msg_list.msg_from_raspi['MEETING_IS_ENDING'] == True:
                 msg_list.msg_from_raspi['MEETING_IS_ENDING'] = False
                 param_host.state['tx2_state'] = 'END'           
