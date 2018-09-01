@@ -105,9 +105,20 @@ def thread_launch_process():
         os.system('notepad.exe')
         
         
-def thread_process_watchdog():
-    pid_to_kill = find_meeting_process
-    
+def fun_process_monitor():
+    error_code = 0
+    try:
+        pid_to_monitor = find_meeting_process()
+        if pid_to_monitor == 0:
+            print("process is quit. 15min noface??")
+            error_code = 15
+        elif pid_to_monitor == -1:
+            error_code = -1
+        else:
+            error_code = int(pid_to_monitor)
+    except:
+        error_code = -2        
+    return error_code
     
 
 
@@ -119,7 +130,7 @@ def find_meeting_process():
         for line in output_lines:
             if str(line).find('grep') == -1:
                 arr = str(line).split()
-                print('pid===',int(arr[1]))
+                #print('pid =',int(arr[1]))
                 return int(arr[1])
         return 0
     except:
@@ -138,9 +149,9 @@ def end_meeting():
         print('~~~~~~~~~~~~~~~~~~~~~~try to stop')
         pid_to_kill = find_meeting_process()
         if pid_to_kill == 0:
-            print("can't find meeting daemon---------------------------")
+            print("can't find meeting process")
         elif pid_to_kill == -1:
-            print('error when listing process---------------------------')
+            print('error when list task')
         else:
             if(platform.system() == "Linux"):
                 command = 'kill ' + str(pid_to_kill)
@@ -215,9 +226,11 @@ def thread_tx2_state_machine():
                 start_new_meeting()
                 
         elif param_host.state['tx2_state'] == 'RECORDING' :
-            if param_host.param1['no_face_15min'] == True: # 15min noface
+            proc_status = fun_process_monitor()
+            if proc_status == 15:
                 set_timer_task(1, True, False)#end meeting
-                #udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])  
+            elif (proc_status == -1 or proc_status == -2):
+                print('error output')
             if msg_list.msg_from_raspi['MEETING_IS_ENDING'] == True:
                 msg_list.msg_from_raspi['MEETING_IS_ENDING'] = False
                 param_host.state['tx2_state'] = 'END'           
