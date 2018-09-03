@@ -4,6 +4,7 @@ import param
 import json
 import platform
 import msg_list
+import time
 
 
 # def fun_send_msg(udp_msg):
@@ -15,8 +16,11 @@ import msg_list
 
    
 def send_msg(udp_msg):
-    json_string = json.dumps(udp_msg)
-    my_udp_socket.sendall(json_string.encode())
+    try:
+        json_string = json.dumps(udp_msg)
+        my_udp_socket.sendall(json_string.encode())
+    except:
+        print('send msg error. connection disappear when send msg')
     #print('send_msg->', udp_msg)
 
    
@@ -69,7 +73,13 @@ else:
 
     
 ## create UDP socket
-my_udp_socket = socket(AF_INET,SOCK_DGRAM)
-my_udp_socket.connect((server['IP'],server['PORT']))
+while 1:
+    try:
+        my_udp_socket = socket(AF_INET,SOCK_DGRAM)
+        my_udp_socket.connect((server['IP'],server['PORT']))
+        break
+    except:
+        time.sleep(1)
+        print('wait_for_pppd_service!!!!!!')
 print('connect to', server)
 _thread.start_new_thread(thread_udp_recv, ())   

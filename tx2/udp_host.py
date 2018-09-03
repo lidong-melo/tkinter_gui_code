@@ -4,7 +4,7 @@ import _thread
 import json
 import param_host
 import msg_list
-
+import time
 
 def tx2_udp_send(msg_dict):
     json_string = json.dumps(msg_dict)
@@ -69,7 +69,13 @@ print(server)
     
     
 #udp init
-s = socket(AF_INET,SOCK_DGRAM)  
-s.bind((server['IP'], server['PORT']))
+while 1:
+    try:
+        s = socket(AF_INET,SOCK_DGRAM)  
+        s.bind((server['IP'], server['PORT']))
+        break
+    except:
+        time.sleep(1)
+        print('wait_for_pppd_service!!!!!!')
 #_thread.start_new_thread(fun_thread_quit_check, ())
 _thread.start_new_thread(thread_udp_recv, ())    

@@ -12,7 +12,7 @@ import msg_list
 import wifi
 import udp_host
 import subprocess
-import psutil
+#import psutil
 #import serial
 
 
@@ -100,7 +100,7 @@ def start_new_meeting():
     if platform.system() == "Linux":
         pid = find_meeting_process()
         if pid == 0:
-            proc = subprocess.Popen(["xterm"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp'], stdout=subprocess.PIPE, universal_newlines=True, cwd='/home/nvidia/melo-device-demo/bin/')
         return pid
     else:
         os.system('notepad.exe')
@@ -109,7 +109,7 @@ def start_new_meeting():
 def find_meeting_process():
     try:
         # time cost 0.03s
-        res = subprocess.Popen('ps -ef | grep xterm',stdout=subprocess.PIPE,shell=True)
+        res = subprocess.Popen('ps -ef | grep melo-mvp',stdout=subprocess.PIPE,shell=True)
         output_lines = res.stdout.readlines()
         for line in output_lines:
             if str(line).find('grep') == -1:
