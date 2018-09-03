@@ -101,6 +101,8 @@ def start_new_meeting():
         pid = find_meeting_process()
         if pid == 0:
             proc = subprocess.Popen('/home/nvidia/melo-device-demo/bin/melo-mvp', stdout=subprocess.PIPE, universal_newlines=True, cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+            time.sleep(2)
+            print('~~~~time delay 2s')
         return pid
     else:
         os.system('notepad.exe')
@@ -138,6 +140,8 @@ def end_meeting():
             print('command:',command)
             os.system(command)
             print('~~~~~~~~~~~~~~~~~~~~~~stop ok')
+            time.sleep(2)
+            print('~~delay 2s')
     except:
         return error_code
         
