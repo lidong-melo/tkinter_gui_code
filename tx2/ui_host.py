@@ -7,7 +7,6 @@ import os
 import datetime
 import time
 import _thread
-import platform
 import msg_list
 import wifi
 import udp_host
@@ -63,10 +62,8 @@ def thread_get_rssi():
 #time cost is 1.71s, need sudo, otherwise it would be fail and the time cost is 17ms
     while param_host.flag['thread_quit'] != True: 
         # time cost is 17ms
-        if(platform.system() == "Linux"):
-            rssi = wifi.get_rssi()
-        else:
-            rssi = '255'# pc调试用
+        rssi = wifi.get_rssi()
+        
         if rssi.isdigit():
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = rssi
             udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
@@ -90,23 +87,15 @@ def thread_timer_task():
                             task['callback']()
 
                             
-def play_sound(file_name):
-    pass
-    # if platform.system() == "Linux":
-        # proc = subprocess.Popen(["aplay", "-Dhw:2,0", "/home/nvidia/lidong/"+file_name], stdout=subprocess.PIPE, universal_newlines=True)
-
 
 def start_new_meeting():
 #time cost is 1.71s, need sudo, otherwise it would be fail and the time cost is 17ms
-    if platform.system() == "Linux":
-        pid = find_meeting_process()
-        if pid == 0:
-            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
-            time.sleep(2)
-            print('~~~~time delay 2s')
-        return pid
-    else:
-        os.system('notepad.exe')
+    pid = find_meeting_process()
+    if pid == 0:
+        proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+        time.sleep(2)
+        print('~~~~time delay 2s')
+    return pid
 
 
 def find_meeting_process():
@@ -134,10 +123,7 @@ def end_meeting():
         elif pid_to_kill == -1:
             print('error when list task')
         else:
-            if(platform.system() == "Linux"):
-                command = 'kill ' + str(pid_to_kill)
-            else:
-                command = 'taskkill /pid ' + str(pid_to_kill) +  ' -f'
+            command = 'kill ' + str(pid_to_kill)
             print('command:',command)
             os.system(command)
             print('~~~~~~~~~~~~~~~~~~~~~~stop ok')

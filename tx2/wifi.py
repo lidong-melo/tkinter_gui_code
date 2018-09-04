@@ -5,7 +5,7 @@ import re
 #sudo iw dev wlan0 scan | grep -E 'on wlan0|signal:|SSID:' > ~/lidong/rssi.txt
 
 def get_rssi():
-    proc = subprocess.Popen(["iw", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
+    proc = subprocess.Popen(["sudo", "iw", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
     out, err = proc.communicate()
     
     index1 = out.find('associated')
