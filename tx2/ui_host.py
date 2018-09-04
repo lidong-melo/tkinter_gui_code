@@ -101,7 +101,7 @@ def start_new_meeting():
     if platform.system() == "Linux":
         pid = find_meeting_process()
         if pid == 0:
-            proc = subprocess.Popen('/home/nvidia/melo-device-demo/bin/melo-mvp', stdout=subprocess.PIPE, universal_newlines=True, cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
             time.sleep(2)
             print('~~~~time delay 2s')
         return pid
