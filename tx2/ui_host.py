@@ -21,6 +21,7 @@ def fun_thread_quit_check():
 # if ui quit, tell other threads to quit
     try:
         pass
+        time.sleep(1)
         # if param_host.param1['display'] == True:
             # root.cget('bg')
     except:
@@ -72,7 +73,7 @@ def thread_get_rssi():
         else:
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = 255
             udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
-        time.sleep(3)
+        time.sleep(10)
         
 def thread_timer_task():
     while param_host.flag['thread_quit'] == False :
@@ -187,7 +188,7 @@ def thread_ui_reaction():
 #mute 和 vol+- 还未实现
 def thread_tx2_state_machine():
     while param_host.flag['thread_quit'] != True:
-        time.sleep(0.02)
+        time.sleep(0.05)
         if param_host.state['reset_tx2_state'] == True:#异常，强制关闭会议后退出
             param_host.state['reset_tx2_state'] = False
             param_host.state['tx2_state'] = 'RESET'
@@ -280,4 +281,5 @@ set_timer_task(4, True, True)#tx2_status_watch_dog
 while 1:
     #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ find process::',find_meeting_process())
     #time.sleep(10)
+    time.sleep(10)
     pass    
