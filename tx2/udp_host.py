@@ -9,10 +9,10 @@ import time
 def tx2_udp_send(msg_dict):
     json_string = json.dumps(msg_dict)
     address_tuple = tuple(param_host.address_list)
-    print('ip address:',param_host.address_list)
+    #print('ip address:',param_host.address_list)
     try:
         s.sendto(json_string.encode(), address_tuple)
-        print(address_tuple)
+        #print(address_tuple)
         print('send', address_tuple, json_string)
     except:
         print(address_tuple)
@@ -42,14 +42,6 @@ def thread_udp_recv():
 
 
 def parse_udp_msg(msg):
-    ##print('parse -->')
-    # 按照状态机接收解析消息，如果不对应则抛弃。
-    # 方法1：在字典中找列表中的值
-    # for key in msg_list_filter[status['meeting_status']]:
-        # print('123',key)
-        # if msg.get(key):
-            # msg_from_tx2[key] = msg[key]
-    
     # 方法2：在列表中找字典中的key
     for key in msg:
         if msg_list.msg_list_filter[param_host.state['tx2_state']].count(key) != 0:
@@ -74,5 +66,4 @@ while 1:
     except:
         time.sleep(1)
         print('wait_for_pppd_service!!!!!!')
-#_thread.start_new_thread(fun_thread_quit_check, ())
 _thread.start_new_thread(thread_udp_recv, ())    

@@ -16,22 +16,22 @@ import subprocess
 
 
 
-def fun_thread_quit_check():
-# if ui quit, tell other threads to quit
-    try:
-        pass
-        time.sleep(1)
-        # if param_host.param1['display'] == True:
-            # root.cget('bg')
-    except:
-        param_host.flag['thread_quit'] = True
-        s.close()
+# def fun_thread_quit_check():
+# # if ui quit, tell other threads to quit
+    # try:
+        # pass
+        # time.sleep(1)
+        # # if param_host.param1['display'] == True:
+            # # root.cget('bg')
+    # except:
+        # param_host.flag['thread_quit'] = True
+        # s.close()
 
     
     
     
 def tx2_status_watch_dog():
-    print('state-->raspi:',msg_list.msg_from_raspi['raspi_state'], 'tx2:',param_host.state['tx2_state'])
+    #print('state-->raspi:',msg_list.msg_from_raspi['raspi_state'], 'tx2:',param_host.state['tx2_state'])
     if param_host.state['tx2_state'] == msg_list.msg_from_raspi['raspi_state']:
         msg_list.msg_from_raspi['raspi_state'] = 'READY'
         param_host.watch_dog['timeout'] = param_host.watch_dog['interval']
@@ -47,9 +47,9 @@ list_timer_task = [
 {'name':'send_msg_system_ready', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_host.tx2_udp_send, 'arg':msg_list.msg_to_raspi[0]},#0
 {'name':'send_msg_end_meeting', 'enable':False, 'interval':1, 'countdown':1, 'callback':udp_host.tx2_udp_send, 'arg':msg_list.msg_to_raspi[3]},#1 end meeting
 {'name':'send_msg_tx2_status', 'enable':False, 'interval':3, 'countdown':3, 'callback':udp_host.tx2_udp_send, 'arg':param_host.state},#2
-{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},#3
+#{'name':'thread_quit_check', 'enable':False, 'interval':1, 'countdown':1, 'callback':fun_thread_quit_check},#3
 #{'name':'update_label_status', 'enable':False, 'interval':1, 'countdown':1, 'callback':update_label_status, 'arg':param_host.state},#4
-{'name':'tx2_status_watch_dog', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_status_watch_dog},#4
+{'name':'tx2_status_watch_dog', 'enable':False, 'interval':1, 'countdown':1, 'callback':tx2_status_watch_dog},#3
 ]
 
 def set_timer_task(task_id, enable, reset):
@@ -66,11 +66,11 @@ def thread_get_rssi():
         
         if rssi.isdigit():
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = rssi
-            udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
+            #udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
         else:
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = 255
-            udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
-        time.sleep(10)
+            #udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
+        time.sleep(3)
         
 def thread_timer_task():
     while param_host.flag['thread_quit'] == False :
@@ -257,15 +257,13 @@ _thread.start_new_thread(thread_timer_task, ())
 _thread.start_new_thread(thread_get_rssi, ())
 
 set_timer_task(2, True, True)#loop send state
-set_timer_task(3, True, True)#thread_quit_check 
+#set_timer_task(3, True, True)#thread_quit_check 
 #set_timer_task(4, True, True)#update label_status
-set_timer_task(4, True, True)#tx2_status_watch_dog
+set_timer_task(3, True, True)#tx2_status_watch_dog
 
 
 
 #main loop
 while 1:
-    #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ find process::',find_meeting_process())
-    #time.sleep(10)
     time.sleep(10)
     pass    
