@@ -21,14 +21,19 @@ def serial_recv(serial_port):
             # sendAT_Cmd(ser,'stop\r')
  
 def serial_send(serial_port, send_str):
-    serial_port.write(send_str.encode('utf-8'))
+    try:
+        serial_port.write(send_str.encode('utf-8'))
+    except:
+        print ('serial send fail')
 
 def serial_init():
-    serial_port = serial.Serial("/dev/ttyACM0",115200,timeout=5)
-    #serial_port = serial.Serial("COM11",115200,timeout=5)
-    print(type(serial_port)) #<class 'serial.serialwin32.Serial'>  #<class 'serial.serialposix.Serial'>
-    return serial_port
-
+    try:
+        serial_port = serial.Serial("/dev/ttyACM0",115200,timeout=5)
+        #print(type(serial_port))  #<class 'serial.serialposix.Serial'>
+        ret_list = [True, serial_port]
+    except:
+        ret_list = [False]
+    return ret_list
     
 #hi = serial_init()
 #ser = serial.Serial("/dev/ttyACM0",115200,timeout=5)

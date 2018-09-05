@@ -11,6 +11,7 @@ import msg_list
 import wifi
 import udp_host
 import subprocess
+import serial_host
 #import psutil
 #import serial
 
@@ -261,7 +262,17 @@ set_timer_task(2, True, True)#loop send state
 #set_timer_task(4, True, True)#update label_status
 set_timer_task(3, True, True)#tx2_status_watch_dog
 
-
+ret_list = serial_host.serial_init()
+if ret_list[0] == True:
+    print('serial open ok!')
+    serial_port = ret_list[1]
+    serial_host.serial_send(serial_port,'hello melo\n')
+    #serial_host.serial_send(serial_port,'start record\n')
+    #time.sleep(5)
+    #serial_host.serial_send(serial_port,'stop\n')
+    serial_port.close()
+else:
+    print('serial open fail！')
 
 #main loop
 while 1:
