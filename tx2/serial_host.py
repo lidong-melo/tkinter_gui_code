@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #coding:utf-8
 import serial
-#import time
+import time
 #import re
 #import _thread
 
@@ -35,6 +35,22 @@ def serial_init():
         ret_list = [False]
     return ret_list
     
+    
+def serial_reset():
+    ret_list = serial_init()
+    if ret_list[0] == True:
+        print('serial open ok!')
+        serial_port = ret_list[1]
+        serial_send(serial_port,'stop\n')
+        time.sleep(0.1)
+        #serial_host.serial_send(serial_port,'start record\n')
+        #time.sleep(5)
+        #serial_host.serial_send(serial_port,'stop\n')
+        serial_port.close()
+    else:
+        print('serial open fail！')  
+        
+       
 #hi = serial_init()
 #ser = serial.Serial("/dev/ttyACM0",115200,timeout=5)
 #_thread.start_new_thread(serial_recv, (serial_port,))

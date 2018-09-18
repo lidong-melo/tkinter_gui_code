@@ -1,11 +1,18 @@
 #!/usr/bin/python3
 #coding:utf-8
+import time
+for i in range(60):
+    try:
+        from PIL import ImageTk, Image ## to use png format, import imageTK
+        break
+    except:
+        print('wait for import ImageTk,i=',i)
+        time.sleep(1)
 
 import tkinter as tk
-from PIL import ImageTk, Image ## to use png format, import imageTK
 from tkinter import Button, PhotoImage, Label, Canvas
 import _thread
-import time
+#import time
 import datetime
 import msg_list
 

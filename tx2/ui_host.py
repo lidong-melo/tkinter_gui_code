@@ -67,10 +67,10 @@ def thread_get_rssi():
         
         if rssi.isdigit():
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = rssi
-            #udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
+            udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
         else:
             msg_list.msg_to_raspi[8]['WIFI_RSSI'] = 255
-            #udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
+            udp_host.tx2_udp_send(msg_list.msg_to_raspi[8])
         time.sleep(3)
         
 def thread_timer_task():
@@ -93,9 +93,16 @@ def start_new_meeting():
 #time cost is 1.71s, need sudo, otherwise it would be fail and the time cost is 17ms
     pid = find_meeting_process()
     if pid == 0:
-        proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
-        time.sleep(2)
-        print('~~~~time delay 2s')
+        #serial_host.serial_reset()
+        #time.sleep(0.1)
+        try:
+            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+            time.sleep(2)
+            print('~~~~time delay 2s')
+        except:
+            #开启失败
+            pid = -2
+            pass
     return pid
 
 
@@ -127,8 +134,21 @@ def end_meeting():
             command = 'kill ' + str(pid_to_kill)
             print('command:',command)
             os.system(command)
-            print('~~~~~~~~~~~~~~~~~~~~~~stop ok')
-            time.sleep(2)
+            #print('~~~~~~~~~~~~~~~~~~~~~~stop ok')
+            #time.sleep(2)
+            retry  = 0
+            while 1:
+                time.sleep(0.5)
+                pid_to_kill = find_meeting_process()
+                if pid_to_kill == 0:
+                    print("meeting is stop")
+                    break
+                else:
+                    print('meeting is still alive-----',retry)
+                retry += 1
+                if retry > 20:
+                    break
+                
             print('~~delay 2s')
     except:
         return error_code
@@ -194,14 +214,18 @@ def thread_tx2_state_machine():
                 err = start_new_meeting()
                 if err == -1:
                     print('list task error')
+                elif err == -2:
+                    print('launch app error')
                 elif err == 0:
                     print('launch meeting ok')
                 else:
                     print('another meeting is running!!!!!!!!!')
                 
-                param_host.state['tx2_state'] = 'RECORDING'
-                udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
-                
+                if err >= 0:
+                    param_host.state['tx2_state'] = 'RECORDING'
+                    udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
+                else:
+                    param_host.state['tx2_state'] = 'RESET'
                 
         elif param_host.state['tx2_state'] == 'RECORDING' :
             pid = find_meeting_process()
@@ -239,6 +263,8 @@ def thread_tx2_state_machine():
                 
         elif param_host.state['tx2_state'] == 'END' :#结束会议
             end_meeting()
+            serial_host.serial_reset()
+            time.sleep(0.1)
             set_timer_task(1, False, False)#end meeting 
             udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])
             param_host.state['tx2_state'] = 'IDLE'
@@ -262,17 +288,7 @@ set_timer_task(2, True, True)#loop send state
 #set_timer_task(4, True, True)#update label_status
 set_timer_task(3, True, True)#tx2_status_watch_dog
 
-ret_list = serial_host.serial_init()
-if ret_list[0] == True:
-    print('serial open ok!')
-    serial_port = ret_list[1]
-    serial_host.serial_send(serial_port,'hello melo\n')
-    #serial_host.serial_send(serial_port,'start record\n')
-    #time.sleep(5)
-    #serial_host.serial_send(serial_port,'stop\n')
-    serial_port.close()
-else:
-    print('serial open fail！')
+serial_host.serial_reset()
 
 #main loop
 while 1:
