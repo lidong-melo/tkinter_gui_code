@@ -1,0 +1,8 @@
+@lxpanel --profile LXDE-pi
+@pcmanfm --desktop --profile LXDE-pi
+@xscreensaver -no-splash
+@point-rpi
+@/bin/sh /home/pi/share/raspi/autorun /home/pi/share/raspi/autorun.log
+#time=$(date "+%Y%m%d-%H%M%S")
+#touch /home/pi/share/raspi/python_log/log-$time.log 2>&1
+#nohup /usr/bin/env python3 -u /home/pi/share/raspi/ui_client.py > /home/pi/share/raspi/python_log/log-$time.log 2>&1 &
