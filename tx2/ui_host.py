@@ -14,6 +14,7 @@ import subprocess
 import serial_host
 #import psutil
 #import serial
+import rpc_caller
 
 
 
@@ -96,7 +97,7 @@ def start_new_meeting():
         #serial_host.serial_reset()
         #time.sleep(0.1)
         try:
-            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+            proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/melo-mvp', '-upload', '-fusion_log'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
             time.sleep(2)
             print('~~~~time delay 2s')
         except:
@@ -240,7 +241,9 @@ def thread_tx2_state_machine():
                 msg_list.msg_from_raspi['MEETING_IS_ENDING'] = False
                 param_host.state['tx2_state'] = 'END'           
             if msg_list.msg_from_raspi['MEETING_IS_PAUSING'] == True:
-                msg_list.msg_from_raspi['MEETING_IS_PAUSING'] = False            
+                msg_list.msg_from_raspi['MEETING_IS_PAUSING'] = False 
+                #proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/backend-test-client', 'pause'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))
+                rpc_caller.rpc_pause()
                 param_host.state['tx2_state'] = 'PAUSED'
                 udp_host.tx2_udp_send(msg_list.msg_to_raspi[2])
                 
@@ -257,7 +260,9 @@ def thread_tx2_state_machine():
                 param_host.state['tx2_state'] = 'END'
                 
             elif msg_list.msg_from_raspi['MEETING_IS_RESUMING'] == True:
-                msg_list.msg_from_raspi['MEETING_IS_RESUMING'] = False            
+                msg_list.msg_from_raspi['MEETING_IS_RESUMING'] = False
+                #proc = subprocess.Popen(['/home/nvidia/melo-device-demo/bin/backend-test-client', 'resume'], cwd='/home/nvidia/melo-device-demo/bin/', env=dict(os.environ, DISPLAY=':0',XAUTHORITY='/home/nvidia/.Xauthority'))                         
+                rpc_caller.rpc_resume()
                 param_host.state['tx2_state'] = 'RECORDING'
                 udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
                 

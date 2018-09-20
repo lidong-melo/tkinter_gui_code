@@ -1,3 +1,4 @@
+#coding:utf-8
 import platform
 from socket import *
 import _thread
