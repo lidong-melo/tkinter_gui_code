@@ -247,7 +247,7 @@ def raspi_state_watch_dog():
     elif param.watch_dog['timeout'] > 0:
         param.watch_dog['timeout'] -= 1
     else:
-        print("------------------------ a ----------------------")
+        #print("------------------------ a ----------------------")
         param.watch_dog['watch_dog_timeout'] = param.watch_dog['interval']
         param.state['reset_raspi_state'] = True
 
@@ -616,7 +616,13 @@ canvas_meeting_end_loading.create_image(32, 32, image = photoimage_button_end)
 canvas_meeting_end_loading.create_image(32, 32, image = photoimage_loading_spinner_background)
 canvas_meeting_end_loading.create_image(32, 32, image = photoimage_loading_spinner)
 
-
+def thread_test_button_click():
+    time.sleep(5)
+    button_click('start_meeting')
+    time.sleep(25)
+    button_click('stop_meeting')
+    
+    
 
 _thread.start_new_thread(fun_rotate_pic, ())
 _thread.start_new_thread(thread_state_machine, ())
@@ -625,6 +631,7 @@ _thread.start_new_thread(thread_update_timeout, ())
 
 _thread.start_new_thread(thread_timer_task, ())
 _thread.start_new_thread(thread_UI_update, ())
+_thread.start_new_thread(thread_test_button_click, ())
 
 
 set_timer_task(3, True, True) #thread_quit_check

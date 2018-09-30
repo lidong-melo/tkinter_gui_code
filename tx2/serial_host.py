@@ -49,20 +49,16 @@ def serial_reset():
         serial_port.close()
     else:
         print('serial open fail！')  
-        
-       
-#hi = serial_init()
-#ser = serial.Serial("/dev/ttyACM0",115200,timeout=5)
-#_thread.start_new_thread(serial_recv, (serial_port,))
-#time.sleep(1)
-#serial_send(serial_port,'\r')#避免开机乱码导致第一条命令接收不到
-#time.sleep(1)
 
-#while 1:
-    # print('-----send start record')
-    # sendAT_Cmd(ser,'start record\r')
-    # time.sleep(10)
-    # print('-----send stop')
-    # sendAT_Cmd(ser,'stop\r')
-    # time.sleep(10)    
-    # pass
+
+def serial_send_cmd(cmd_str):
+    ret_list = serial_init()
+    if ret_list[0] == True:
+        print('serial open ok!')
+        serial_port = ret_list[1]
+        serial_send(serial_port, cmd_str)
+        time.sleep(0.1)
+        serial_port.close()
+    else:
+        print('serial open fail！')
+

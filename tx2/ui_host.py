@@ -224,6 +224,9 @@ def thread_tx2_state_machine():
                 
                 if err >= 0:
                     param_host.state['tx2_state'] = 'RECORDING'
+                    serial_host.serial_send_cmd('led on\n')
+                    #serial_host.serial_send('led on\n')
+                    time.sleep(0.1)
                     udp_host.tx2_udp_send(msg_list.msg_to_raspi[1])
                 else:
                     param_host.state['tx2_state'] = 'RESET'
@@ -268,7 +271,8 @@ def thread_tx2_state_machine():
                 
         elif param_host.state['tx2_state'] == 'END' :#结束会议
             end_meeting()
-            serial_host.serial_reset()
+            serial_host.serial_send_cmd('led off\n')
+            #serial_host.serial_send('led off\n')
             time.sleep(0.1)
             set_timer_task(1, False, False)#end meeting 
             udp_host.tx2_udp_send(msg_list.msg_to_raspi[4])
@@ -292,10 +296,15 @@ set_timer_task(2, True, True)#loop send state
 #set_timer_task(3, True, True)#thread_quit_check 
 #set_timer_task(4, True, True)#update label_status
 set_timer_task(3, True, True)#tx2_status_watch_dog
+#serial_host.serial_init()
+#_thread.start_new_thread(serial_host.thread_serial_recv, ())
+#serial_send('tx2 ready!\n')
+#serial_send('tx2 ready!\n')
 
-serial_host.serial_reset()
+#serial_host.serial_reset()
 
 #main loop
 while 1:
     time.sleep(10)
-    pass    
+    pass
+#serial_host.serial_uninit()
